@@ -1,32 +1,10 @@
 #include <string.h>
 #include "errlist.h"
-#define ERR_COUNT 25
+#define ERR_COUNT 3
 static const char* errlist[ERR_COUNT] = {
   ERR_COMMAND_LINE,
-  ERR_LOGIN,
-  ERR_UNAUTHORIZED,
-  ERR_WRONG_CREDENTIALS,
-  ERR_GET_DEVICE,
-  ERR_GET_TRACK,
-  ERR_GET_WATCHER,
-  ERR_GET_RAW_DATA,
-  ERR_SET_DEVICE,
-  ERR_ADD_DEVICE,
-  ERR_RM_DEVICE,
-  ERR_ADD_TRACK,
   ERR_SELECT,
-  ERR_PG_CONN,
-  ERR_PG_CONNECTION,
-  ERR_PG_CONSUME_INPUT,
-  ERR_PG_RESULT,
-  ERR_PG_WRONG_SOCKET,
-  ERR_PG_CONNECT_POLL,
-  ERR_PG_LISTEN,
-  ERR_PARAMETER_CONNINFO,
-  ERR_PG_TIMEOUT,
-  ERR_SET_WATCHER,
-  ERR_ADD_WATCHER,
-  ERR_RM_WATCHER,
+  ERR_MESSAGE_EMPTY
 };
 
 #define ERR_GRPC_COUNT 16
@@ -49,7 +27,7 @@ static const char* errGRPClist[ERR_GRPC_COUNT] = {
   ERR_GRPC_UNAUTHENTICATED
 };
 
-const char *strerror_gps(
+const char *strerror_sms(
   int errcode
 )
 {

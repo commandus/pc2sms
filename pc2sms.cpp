@@ -17,7 +17,7 @@
 #define DEF_CONFIG_FILE_NAME    ".pc2sms"
 #define progname                "pc2sms"
 
-GpsTrackMgrServiceImpl *server = NULL;
+SMSServiceImpl *server = NULL;
 
 static void done() {
   if (server != NULL) {
@@ -80,7 +80,7 @@ void run() {
         password,
         config
     );
-    server = new GpsTrackMgrServiceImpl(conninfo, listenAddress, allow_user_add_device);
+    server = new SMSServiceImpl(listenAddress, login, password);
     server->run();
 }
 
