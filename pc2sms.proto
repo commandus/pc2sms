@@ -10,7 +10,7 @@ option cc_enable_arenas = true;
 package pc2sms;
 
 service sms {
-  rpc requestToSend(stream RequestCommand) returns (ResponseCommand);
+  rpc requestToSend(RequestCommand) returns (ResponseCommand);
   rpc listen(Credentials) returns (stream SMS);
 }
 

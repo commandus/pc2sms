@@ -1,67 +1,16 @@
-#define DEF_TRACKS_COUNT            1440
-#define DEF_DEVICE_COUNT            1024
+#define ERR_CODE_COMMAND_LINE		    -500
+#define ERR_CODE_SELECT             	-501
+#define ERR_CODE_MESSAGE_EMPTY			-502
 
-#define ERR_CODE_COMMAND_LINE		      -500
-#define ERR_CODE_LOGIN       		      -501
-#define ERR_CODE_UNAUTHORIZED			    -502
-#define ERR_CODE_WRONG_CREDENTIALS		-503
-#define ERR_CODE_GET_DEVICE			      -504
-#define ERR_CODE_GET_TRACK    	    	-505
-#define ERR_CODE_GET_WATCHER		      -506
-#define ERR_CODE_GET_RAW_DATA       	-507
-#define ERR_CODE_SET_DEVICE			      -508
-#define ERR_CODE_ADD_DEVICE			      -509
-#define ERR_CODE_RM_DEVICE			      -510
-#define ERR_CODE_ADD_TRACK			      -511
-#define ERR_CODE_SELECT             	-512
-#define ERR_CODE_PG_CONN			        -513
-#define ERR_CODE_PG_CONNECTION      	-514
-#define ERR_CODE_PG_CONSUME_INPUT   	-515
-#define ERR_CODE_PG_RESULT          	-516
-#define ERR_CODE_PG_WRONG_SOCKET    	-517
-#define ERR_CODE_PG_CONNECT_POLL    	-518
-#define ERR_CODE_PG_LISTEN		      	-519
-#define ERR_CODE_PARAMETER_CONNINFO 	-520
-#define ERR_CODE_PG_TIMEOUT          	-521
-#define ERR_CODE_SET_WATCHER		      -522
-#define ERR_CODE_ADD_WATCHER		      -523
-#define ERR_CODE_RM_WATCHER	  	      -524
+#define SMS_OK	        					0
 
-#define TRACKER_OK        					0
+#define ERR_COMMAND_LINE        		"Wrong parameter(s)"
+#define ERR_SELECT              		"select() failed"
+#define ERR_MESSAGE_EMPTY				"Empty message"
 
-#define ERR_COMMAND_LINE        "Wrong parameter(s)"
-#define ERR_LOGIN				        "Service can not verify credentials "
-#define ERR_UNAUTHORIZED		    "Unauthorized "
-#define ERR_WRONG_CREDENTIALS	  "Invalid user or password "
-#define ERR_GET_DEVICE          "Error get device "
-#define ERR_GET_TRACK   	      "Error get track "
-#define ERR_GET_WATCHER         "Error get watcher "
-#define ERR_GET_RAW_DATA        "Error get raw data packet "
-#define ERR_SET_DEVICE			    "Error set device "
-#define ERR_ADD_DEVICE			    "Error add device "
-#define ERR_RM_DEVICE     			"Error remove device "
-#define ERR_ADD_TRACK			      "Error add track "
-#define ERR_SELECT              "select() failed"
-#define ERR_PG_CONN             "Postgres connection failed "
-#define ERR_PG_CONNECTION       "Connection to database failed "
-#define ERR_PG_CONSUME_INPUT    "Failed to consume Postgres input "
-#define ERR_PG_RESULT           "Postgres result error "
-#define ERR_PG_WRONG_SOCKET     "Postgres socket is gone "
-#define ERR_PG_CONNECT_POLL     "Postgres query failed "
-#define ERR_PG_LISTEN           "Postgres LISTEN failed "
-#define ERR_PARAMETER_CONNINFO  "No database connection is provided in "
-#define ERR_PG_TIMEOUT          "Postrges select timeout "
-#define ERR_SET_WATCHER			    "Error set watcher "
-#define ERR_ADD_WATCHER			    "Error add watcher "
-#define ERR_RM_WATCHER			    "Error remove watcher "
-
-#define MSG_INTERRUPTED 		    "Interrupted "
-#define MSG_PG_CONNECTED        "Connected"
-#define MSG_PG_CONNECTING       "Connecting..."
-#define MSG_DAEMON_STARTED      "Start daemon "
-#define MSG_DAEMON_STARTED_1    ". Check syslog."
-
-#define STR_PG_LISTEN           "LISTEN "
+#define MSG_INTERRUPTED 		    	"Interrupted "
+#define MSG_DAEMON_STARTED      		"Start daemon "
+#define MSG_DAEMON_STARTED_1    		". Check syslog."
 
 // GRPC
 
@@ -98,4 +47,4 @@
 #define ERR_CODE_GRPC_UNAUTHENTICATED   16
 #define ERR_GRPC_UNAUTHENTICATED        "The request does not have valid authentication credentials for the operation"
 
-const char *strerror_gps(int errcode);
+const char *strerror_sms(int errcode);
