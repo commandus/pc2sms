@@ -73,7 +73,8 @@ class RequestToSendData : public CommonCallData {
     SMSServiceImpl *service;
     bool new_responder_created;
     pc2sms::ResponseCommand result;
-    int load();
+    void notifyClients(const std::vector<pc2sms::SMS> &values);
+    void notifyClients(const pc2sms::SMS &value);
   public:
     // What we get from the client
     pc2sms::RequestCommand request;
@@ -87,7 +88,7 @@ class RequestToSendData : public CommonCallData {
 };
 
 /**
- * Listen Commands
+ * Responds on listen
  */
 class ListenData : public CommonCallData {
   private:
@@ -96,9 +97,6 @@ class ListenData : public CommonCallData {
     std::queue<pc2sms::SMS> result;
     // listen for a notifications of new records
     int listenNotifications();
-    bool isAllowed(
-      const pc2sms::Credentials &credentials
-    );
     bool writeNext();
   public:
     // What we get from the client in login.
@@ -114,7 +112,7 @@ class ListenData : public CommonCallData {
 };
 
 /**
- * Enqueue ListenOrderData after database signal a new record arrived
+ * Enqueue ListenData after signal a new SMS to send request arrived
  */
 class QueuingMgr : public CommonCallData {
   private:

@@ -2,7 +2,8 @@ SUBDIRS = .
 ACLOCAL_AMFLAGS = -I m4
 # `pkg-config --libs protobuf grpc++`
 LDFLAGS=-L/usr/local/lib -lprotobuf -lgrpc++ -lgrpc -pthread -lssl -lcrypto -lz -lgpr
-AM_CXXFLAGS=-std=c++11 
+
+AM_CXXFLAGS=-std=c++11 -O0
 
 # -g3 -O0
 commoncppflags = -Ithird_party

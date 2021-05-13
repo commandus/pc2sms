@@ -1,6 +1,7 @@
 #define ERR_CODE_COMMAND_LINE		    -500
 #define ERR_CODE_SELECT             	-501
 #define ERR_CODE_MESSAGE_EMPTY			-502
+#define ERR_CODE_SEGFAULT				-503
 
 #define SMS_OK	        					0
 
@@ -11,6 +12,7 @@
 #define MSG_INTERRUPTED 		    	"Interrupted "
 #define MSG_DAEMON_STARTED      		"Start daemon "
 #define MSG_DAEMON_STARTED_1    		". Check syslog."
+#define MSG_SERVICE_STOPPED				"Service stopped."
 
 // GRPC
 

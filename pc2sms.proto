@@ -11,7 +11,7 @@ package pc2sms;
 
 service sms {
   rpc requestToSend(RequestCommand) returns (ResponseCommand);
-  rpc listen(Credentials) returns (stream SMS);
+  rpc listenSMSToSend(Credentials) returns (stream SMS);
 }
 
 message Credentials {

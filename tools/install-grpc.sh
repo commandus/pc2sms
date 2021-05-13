@@ -8,7 +8,7 @@
 GRPC_VERSION=1.24.3
 if [ ! -d grpc-${GRPC_VERSION} ]; then
   if [ ! -f grpc-${GRPC_VERSION} ]; then
-    wget -O grpc-${GRPC_VERSION}.tgz https://github.com/grpc/grpc/archive/v${GRPC_VERSION}.tar.gz
+    wget --no-check-certificate -O grpc-${GRPC_VERSION}.tgz https://github.com/grpc/grpc/archive/v${GRPC_VERSION}.tar.gz
   fi
   tar xzf grpc-${GRPC_VERSION}.tgz
 fi;
