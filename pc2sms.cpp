@@ -28,7 +28,7 @@ static void done() {
 
 static void stop() {
   done();
-  exit(0);
+  exit(SMS_OK);
 }
 
 void signalHandler(int signal)
@@ -44,7 +44,7 @@ void signalHandler(int signal)
     void *t[256];
     size_t size = backtrace(t, 256);
     backtrace_symbols_fd(t, size, STDERR_FILENO);
-    exit(1);
+    exit(ERR_CODE_SEGFAULT);
     }
 	default:
 		break;
@@ -64,12 +64,14 @@ void setSignalHandler()
 	action.sa_handler = &signalHandler;
 	sigaction(SIGINT, &action, NULL);
 	// sigaction(SIGHUP, &action, NULL);
-  sigaction(SIGSEGV, &action, NULL);
+  	sigaction(SIGSEGV, &action, NULL);
 }
 #endif
 
-void run() {
-    std::string config = file2string(getDefaultConfigFileName(DEF_CONFIG_FILE_NAME).c_str());
+void run(
+) {
+	std::string configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
+    std::string config = file2string(configFileName.c_str());
     std::string listenAddress;
     std::string login;
     std::string password;
@@ -78,8 +80,18 @@ void run() {
         listenAddress,
         login,
         password,
-        config
+		config
     );
+
+	if (true) {
+		std::cerr 
+			<< "config file: " << configFileName << ", "
+			<< "listenAddress: " << listenAddress << ", "
+			<< "login: " << login << ", "
+			<< "password: " << password << ", "
+			 << std::endl;
+	}
+
     server = new SMSServiceImpl(listenAddress, login, password);
     server->run();
 }

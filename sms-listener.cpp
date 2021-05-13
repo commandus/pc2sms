@@ -35,16 +35,17 @@ void ListenSMS::start(
 )
 {
   stopped = false;
-  listenerThread = new std::thread(&ListenSMS::listenNotifications, this);
+  // listenerThread = new std::thread(&ListenSMS::listenNotifications, this);
+  listenerThread = NULL;
 }
 
 void ListenSMS::stop()
 {
   if (stopped)
     return;
+  stopped = true;
   if (!listenerThread)
     return;
-  stopped = true;
   listenerThread->join();
   listenerThread = NULL;
 }
@@ -55,9 +56,6 @@ void ListenSMS::done()
   stopped = true;
 }
 
-/**
- * @see https://github.com/revmischa/pgnotify-demos/blob/master/pglisten.c
- */
 int ListenSMS::listenNotifications()
 {
   int connected = 0;
@@ -78,7 +76,6 @@ int ListenSMS::listenNotifications()
       stopped = true;
       break;
     case 0:
-      // std::cerr << ERR_PG_TIMEOUT << std::endl;
       break;
     };
   };
@@ -96,11 +93,13 @@ void ListenSMS::printListenResponders()
 
 void ListenSMS::put(ListenData *value)
 {
+  std::cerr << "ListenSMS::put" << std::endl;
   listenResponders.push_back(value);
 }
 
 bool ListenSMS::rm(ListenData *value)
 {
+  std::cerr << "ListenSMS::rm" << std::endl;
   for (std::vector <ListenData*>::iterator it(listenResponders.begin()); it != listenResponders.end(); ++it) {
     if (*it == value) {
       listenResponders.erase(it);
@@ -113,8 +112,10 @@ bool ListenSMS::rm(ListenData *value)
 void ListenSMS::enqueue(
   const std::vector<pc2sms::SMS> &values
 ) {
+  std::cerr << "ListenSMS::enqueue, size: " << listenResponders.size() << std::endl;
+  
   for (std::vector<ListenData*>::iterator it(listenResponders.begin()); it != listenResponders.end(); ++it) {
-    // std::cerr << "ListenPg::enqueue " << std::endl;
+    std::cerr << "ListenSMS::enqueue: " << std::endl;
     (*it)->enqueue(values);
   }
 }

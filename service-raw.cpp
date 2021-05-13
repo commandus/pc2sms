@@ -4,6 +4,8 @@
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
 
+#include <google/protobuf/util/json_util.h>
+
 #include <unistd.h>
 #include <sys/un.h>
 #include <fcntl.h>
@@ -26,6 +28,7 @@ SMSServiceImpl::SMSServiceImpl(
   : address(a_grpc_listener_address), login(a_login), password(a_password),
     clientsListenSMS(this), queuingMgr(NULL), running(false)
 {
+  start();
 }
 
 void SMSServiceImpl::stop() {
@@ -41,6 +44,7 @@ void SMSServiceImpl::stop() {
     delete queuingMgr;
     queuingMgr = NULL;
   }
+  std::cerr << MSG_SERVICE_STOPPED << std::endl;
 }
 
 int SMSServiceImpl::start() {
@@ -111,7 +115,6 @@ CommonCallData::CommonCallData(
 {
 }
 
-
 /**
  * =========== RequestToSendData ===========
  */
@@ -123,9 +126,19 @@ RequestToSendData::RequestToSendData(
   Proceed();
 }
 
-int RequestToSendData::load() {
-  result.set_count(0);
-  return 0;
+void RequestToSendData::notifyClients(const pc2sms::SMS &value)
+{
+  std::cerr << "notify clients 1 " << std::endl;
+  std::vector<pc2sms::SMS> values;
+  values.push_back(value);
+  service->queuingMgr->enqueue(values);
+}
+
+void RequestToSendData::notifyClients(const std::vector<pc2sms::SMS> &values)
+{
+  std::cerr << "notify clients  " << values.size() << std::endl;
+  if (!values.empty())
+    service->queuingMgr->enqueue(values);
 }
 
 void RequestToSendData::Proceed(bool successfulEvent) {
@@ -136,9 +149,21 @@ void RequestToSendData::Proceed(bool successfulEvent) {
     break;
   case PROCESS:
     if (!new_responder_created) {
+
+   	  std::cerr << "RequestToSendData Process" << std::endl;
+      std::string s;
+      google::protobuf::util::MessageToJsonString(request, &s);
+      std::cerr << s << std::endl;
+      if (service->isAllowed(request.credentials())) {
+        notifyClients(request.sms());
+        result.set_count(1);
+      } else {
+        result.set_count(-1);
+      }
+
       new RequestToSendData(service);
       new_responder_created = true;
-      load();
+
       responder.Finish(result, grpc::Status(), (void*) this);
     }
     status = FINISH;
@@ -170,23 +195,17 @@ void ListenData::enqueue(
   const std::vector<pc2sms::SMS> &values
 ) {
   // completion queue alarm
+  std::cerr << "ListenData::enqueue size: " << values.size() << std::endl;
   for (std::vector<pc2sms::SMS>::const_iterator it = values.begin(); it != values.end(); it++) {
     result.push(*it);
   }
   if (result.empty())
     return;
-  if (!isAllowed(credentials))
-    return;
-  if (status == LISTEN_COMMAND_SENT) {
+  std::cerr << "ListenData::enqueue status: " << (int) status << std::endl;
+  if (status == LISTEN_COMMAND) {
     grpc::Alarm alarm;
     alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
   }
-}
-
-bool ListenData::isAllowed(
-      const pc2sms::Credentials &credentials
-) {
-  return smsService->isAllowed(credentials);
 }
 
 bool ListenData::writeNext()
@@ -216,7 +235,7 @@ void ListenData::Proceed(bool successfulEvent)
   switch (status) {
   case CREATE:
     status = LISTEN_COMMAND;
-    service->Requestlisten(&ctx, &credentials, &responder, cq, cq, this);
+    service->RequestlistenSMSToSend(&ctx, &credentials, &responder, cq, cq, this);
     break;
   case LISTEN_COMMAND:
     if (!new_responder_created) {
@@ -298,7 +317,7 @@ void QueuingMgr::enqueue(
  * Push into queue ListenTrackData objects from vector of active clients to send notification about tracks
  */
 void QueuingMgr::Proceed(bool successfulEvent) {
-  // std::cerr << "QueuingMgr enqueue " << this << std::endl;
+  std::cerr << "QueuingMgr enqueue " << this << std::endl;
   if (result.empty())
     return;
   smsService->clientsListenSMS.enqueue(result);
