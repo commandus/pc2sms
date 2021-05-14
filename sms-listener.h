@@ -1,8 +1,8 @@
 #ifndef SMS_LISTENER_H_
 #define SMS_LISTENER_H_	1
 
-#include <thread>
 #include <vector>
+#include <mutex>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/alarm.h>
 
@@ -11,23 +11,26 @@
 class SMSServiceImpl;
 class ListenData;
 
+enum NotifyPolicy {
+  NP_ROUND_ROBIN,
+  NP_ALL
+};
+
 class ListenSMS {
 private:
-  bool stopped;
+  NotifyPolicy policy;
   // Postgres
   std::string conninfo;
   std::vector <ListenData*> listenResponders;
-  std::thread *listenerThread;
   SMSServiceImpl *smsService;
+  ListenData* lastResponder;
+  std::mutex mutexList;
 
   void notifyClients(const std::vector<pc2sms::SMS> &values);
   int listenNotifications();
 public:
-  ListenSMS(SMSServiceImpl *owner);
+  ListenSMS(SMSServiceImpl *owner, NotifyPolicy policy);
   virtual ~ListenSMS();
-  void start();
-  void stop();
-  void done();
   bool checkConnStatus();
   void printListenResponders();
   void put(ListenData *value);

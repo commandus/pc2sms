@@ -75,24 +75,17 @@ void run(
     std::string listenAddress;
     std::string login;
     std::string password;
+	NotifyPolicy policy;
 
     parseServiceConfig(
         listenAddress,
         login,
         password,
+		policy,
 		config
     );
 
-	if (true) {
-		std::cerr 
-			<< "config file: " << configFileName << ", "
-			<< "listenAddress: " << listenAddress << ", "
-			<< "login: " << login << ", "
-			<< "password: " << password << ", "
-			 << std::endl;
-	}
-
-    server = new SMSServiceImpl(listenAddress, login, password);
+    server = new SMSServiceImpl(listenAddress, login, password, policy);
     server->run();
 }
 

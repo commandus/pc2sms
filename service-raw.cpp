@@ -23,10 +23,11 @@
 SMSServiceImpl::SMSServiceImpl(
     const std::string &a_grpc_listener_address,
     const std::string &a_login,
-    const std::string &a_password
+    const std::string &a_password,
+    NotifyPolicy apolicy
 )
   : address(a_grpc_listener_address), login(a_login), password(a_password),
-    clientsListenSMS(this), queuingMgr(NULL), running(false)
+    clientsListenSMS(this, apolicy), queuingMgr(NULL), running(false)
 {
   start();
 }
@@ -66,9 +67,6 @@ int SMSServiceImpl::start() {
 
   // Finally assemble the server.
   server = builder.BuildAndStart();
-
-  // start listener  
-  clientsListenSMS.start();
 
   return 0;
 }
@@ -128,7 +126,6 @@ RequestToSendData::RequestToSendData(
 
 void RequestToSendData::notifyClients(const pc2sms::SMS &value)
 {
-  std::cerr << "notify clients 1 " << std::endl;
   std::vector<pc2sms::SMS> values;
   values.push_back(value);
   service->queuingMgr->enqueue(values);
@@ -136,7 +133,6 @@ void RequestToSendData::notifyClients(const pc2sms::SMS &value)
 
 void RequestToSendData::notifyClients(const std::vector<pc2sms::SMS> &values)
 {
-  std::cerr << "notify clients  " << values.size() << std::endl;
   if (!values.empty())
     service->queuingMgr->enqueue(values);
 }
@@ -149,11 +145,6 @@ void RequestToSendData::Proceed(bool successfulEvent) {
     break;
   case PROCESS:
     if (!new_responder_created) {
-
-   	  std::cerr << "RequestToSendData Process" << std::endl;
-      std::string s;
-      google::protobuf::util::MessageToJsonString(request, &s);
-      std::cerr << s << std::endl;
       if (service->isAllowed(request.credentials())) {
         notifyClients(request.sms());
         result.set_count(1);
@@ -195,13 +186,11 @@ void ListenData::enqueue(
   const std::vector<pc2sms::SMS> &values
 ) {
   // completion queue alarm
-  std::cerr << "ListenData::enqueue size: " << values.size() << std::endl;
   for (std::vector<pc2sms::SMS>::const_iterator it = values.begin(); it != values.end(); it++) {
     result.push(*it);
   }
   if (result.empty())
     return;
-  std::cerr << "ListenData::enqueue status: " << (int) status << std::endl;
   if (status == LISTEN_COMMAND) {
     grpc::Alarm alarm;
     alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
@@ -317,7 +306,6 @@ void QueuingMgr::enqueue(
  * Push into queue ListenTrackData objects from vector of active clients to send notification about tracks
  */
 void QueuingMgr::Proceed(bool successfulEvent) {
-  std::cerr << "QueuingMgr enqueue " << this << std::endl;
   if (result.empty())
     return;
   smsService->clientsListenSMS.enqueue(result);

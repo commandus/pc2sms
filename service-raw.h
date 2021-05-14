@@ -24,7 +24,8 @@ public:
   explicit SMSServiceImpl(
     const std::string &grpc_listener_address,
     const std::string &login,
-    const std::string &password
+    const std::string &password,
+    NotifyPolicy apolicy
   );
   virtual ~SMSServiceImpl();
   int start();
