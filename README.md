@@ -1,10 +1,37 @@
 # pc2sms
 
-Send SMS using Android client.
+The pc2sms utility sends SMS from Linux and Windows programs using Android client.
 
-Android client registers to the service and wait command to send sms.
+First you need to install the Android application on your phone.
 
-Client utility send request to send SMS via service.
+Android application is waiting for commands to send sms from the web service.
+
+Commands for sending sms are sent from the web service one by one to the Android application.
+
+Client utility or library sends a request to send SMS via the service.
+
+```
++---------------------+
+| send-sms / your app |
++---------------------+
+          |
++---------------------+
+| pc2sms web service  |
++---------------------+
+        |
+		|-----------------+-----------------+
+		|                 |                 |
++--------------+   +--------------+       . . .
+|    Android   |   |    Android   |
+| +18001112222 |   | +18001113333 |
++--------------+   +--------------+
+```
+
+Phones are selected in turn one by one.
+
+
+[Android client](https://github.com/commandus/pc2sms-android)
+
 
 ## Build
 
