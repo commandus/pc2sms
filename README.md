@@ -19,8 +19,8 @@ Client utility or library sends a request to send SMS via the service.
 | pc2sms web service  |
 +---------------------+
         |
-		|-----------------+-----------------+
-		|                 |                 |
+        |-----------------+-----------------+
+        |                 |                 |
 +--------------+   +--------------+       . . .
 |    Android   |   |    Android   |
 | +18001112222 |   | +18001113333 |
