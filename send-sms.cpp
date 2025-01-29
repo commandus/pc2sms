@@ -3,8 +3,15 @@
 #include <vector>
 #include <iostream>
 #include <inttypes.h>
-#include <unistd.h>
+#include <csignal>
+
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#else
 #include <execinfo.h>
+#include <unistd.h>
+#define TRACE_BUFFER_SIZE   256
+#endif
 
 #include "argtable3/argtable3.h"
 
@@ -33,6 +40,15 @@ static void stop()
   stopped = true;
 }
 
+static void printTrace() {
+#ifdef _MSC_VER
+#else
+    void *t[TRACE_BUFFER_SIZE];
+    auto size = backtrace(t, TRACE_BUFFER_SIZE);
+    backtrace_symbols_fd(t, size, STDERR_FILENO);
+#endif
+}
+
 void signalHandler(int signal)
 {
 	switch(signal)
@@ -44,10 +60,8 @@ void signalHandler(int signal)
 		break;
 	case SIGSEGV:
     {
-    void *t[256];
-    size_t size = backtrace(t, 256);
-    backtrace_symbols_fd(t, size, STDERR_FILENO);
-    exit(11);
+        printTrace();
+        exit(11);
     }
 	default:
 		break;

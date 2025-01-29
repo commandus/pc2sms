@@ -1,8 +1,13 @@
 #include <string>
 #include <iostream>
-#include <signal.h>
+#include <csignal>
+#include <climits>
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#else
 #include <unistd.h>
-#include <limits.h>
+#define TRACE_BUFFER_SIZE   256
+#endif
 
 #include "argtable3/argtable3.h"
 
@@ -13,6 +18,7 @@
 #include "daemonize.h"
 #include "service-raw.h"
 #include "errlist.h"
+#include "file-helper.h"
 
 #define DEF_CONFIG_FILE_NAME    ".pc2sms"
 #define progname                "pc2sms"
@@ -31,6 +37,15 @@ static void stop() {
   exit(SMS_OK);
 }
 
+static void printTrace() {
+#ifdef _MSC_VER
+#else
+    void *t[TRACE_BUFFER_SIZE];
+    auto size = backtrace(t, TRACE_BUFFER_SIZE);
+    backtrace_symbols_fd(t, size, STDERR_FILENO);
+#endif
+}
+
 void signalHandler(int signal)
 {
 	switch(signal)
@@ -41,10 +56,8 @@ void signalHandler(int signal)
 		break;
 	case SIGSEGV:
     {
-    void *t[256];
-    size_t size = backtrace(t, 256);
-    backtrace_symbols_fd(t, size, STDERR_FILENO);
-    exit(ERR_CODE_SEGFAULT);
+        printTrace();
+        exit(ERR_CODE_SEGFAULT);
     }
 	default:
 		break;
@@ -128,11 +141,9 @@ int main(int argc, char **argv) {
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
 	if (daemonize) {
-		char wd[PATH_MAX];
-		std::string progpath = getcwd(wd, PATH_MAX);	
 		if (verbosity > 1)
-			std::cerr << MSG_DAEMON_STARTED << progpath << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
-		Daemonize daemonize(progname, progpath, run, stop, done);
+			std::cerr << MSG_DAEMON_STARTED << getCurrentDir() << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
+		Daemonize daemonize(progname, getCurrentDir(), run, stop, done);
 	} else {
 		setSignalHandler();
 		run();

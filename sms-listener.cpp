@@ -1,9 +1,13 @@
 #include <sstream>
 #include <algorithm>
 
-#include <unistd.h>
-#include <sys/un.h>
 #include <fcntl.h>
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#else
+#include <sys/un.h>
+#include <unistd.h>
+#endif
 
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
@@ -16,7 +20,7 @@
 
 
 ListenSMS::ListenSMS(SMSServiceImpl *owner, NotifyPolicy apolicy)
-  : policy(apolicy), smsService(owner), lastResponder(NULL)
+  : policy(apolicy), smsService(owner), lastResponder(nullptr)
 {
 }
 

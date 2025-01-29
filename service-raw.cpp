@@ -6,9 +6,12 @@
 
 #include <google/protobuf/util/json_util.h>
 
-#include <unistd.h>
-#include <sys/un.h>
 #include <fcntl.h>
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#else
+#include <sys/un.h>
+#include <unistd.h>
+#endif
 
 #include "errlist.h"
 #include "platform.h"
