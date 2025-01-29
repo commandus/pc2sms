@@ -37,6 +37,12 @@ Phones are selected in turn one by one.
 
 ### Prerequisites
 
+Install gRPC library, gRPC tools and dependencies:
+
+```
+sudo apt install  libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc protobuf-c-compiler
+```
+
 ### gcc
 
 Download protoc's plugin grpc-web from https://github.com/grpc/grpc-web/releases into /usr/local/bin/protoc-gen-grpc-web

@@ -44,7 +44,7 @@ pc2sms_SOURCES= \
 	utilstring.cpp file-helper.cpp daemonize.cpp \
 	config-filename.cpp \
 	third-party/argtable3/argtable3.c \
-	pc2sms.pb.cc \
+	gen/pc2sms.pb.cc \
 	pc2sms-config.cpp \
 	$(common_src)
 pc2sms_LDADD = $(commonlibs)
@@ -53,7 +53,7 @@ pc2sms_CPPFLAGS = $(commoncppflags)
 send_sms_SOURCES= \
 	send-sms.cpp errlist.cpp \
 	third-party/argtable3/argtable3.c config-filename.cpp \
-	utilstring.cpp file-helper.cpp pc2sms.grpc.pb.cc pc2sms.pb.cc \
+	utilstring.cpp file-helper.cpp gen/pc2sms.grpc.pb.cc gen/pc2sms.pb.cc \
 	send-sms-config.cpp \
 	$(common_src)
 send_sms_LDADD = $(commonlibs) -lgrpc $(LIB_COLLARIE)

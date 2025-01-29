@@ -33,6 +33,8 @@ SET(PC2SMS_SOURCES
 	config-filename.cpp
 	pc2sms-config.cpp
 	gen/pc2sms.pb.cc
+	gen/pc2sms.grpc.pb.cc
+
 )
 
 add_executable(pc2sms ${PC2SMS_SOURCES} ${ARGTABLE_SOURCES})
