@@ -17,7 +17,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set(LIB_GRPC ${LIB_GRPC} gRPC::gpr gRPC::grpc gRPC::grpc++ gRPC::grpc++_alts)
 	set(INC_GRPC ${GRPC_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIRS})
 else()
-	set(LIB_GRPC protobuf grpc++ grpc pthread ssl crypto z gpr)
+	set(LIB_GRPC protobuf grpc++ grpc pthread z gpr)
 endif()
 
 SET(ARGTABLE_SOURCES third-party/argtable3/argtable3.c)
