@@ -7,23 +7,24 @@
 #include "pc2sms.pb.h"
 
 #include <functional>
-#include <grpcpp/generic/async_generic_service.h>
-#include <grpcpp/support/async_stream.h>
-#include <grpcpp/support/async_unary_call.h>
-#include <grpcpp/support/client_callback.h>
-#include <grpcpp/client_context.h>
-#include <grpcpp/completion_queue.h>
-#include <grpcpp/support/message_allocator.h>
-#include <grpcpp/support/method_handler.h>
+#include <grpc/impl/codegen/port_platform.h>
+#include <grpcpp/impl/codegen/async_generic_service.h>
+#include <grpcpp/impl/codegen/async_stream.h>
+#include <grpcpp/impl/codegen/async_unary_call.h>
+#include <grpcpp/impl/codegen/client_callback.h>
+#include <grpcpp/impl/codegen/client_context.h>
+#include <grpcpp/impl/codegen/completion_queue.h>
+#include <grpcpp/impl/codegen/message_allocator.h>
+#include <grpcpp/impl/codegen/method_handler.h>
 #include <grpcpp/impl/codegen/proto_utils.h>
-#include <grpcpp/impl/rpc_method.h>
-#include <grpcpp/support/server_callback.h>
+#include <grpcpp/impl/codegen/rpc_method.h>
+#include <grpcpp/impl/codegen/server_callback.h>
 #include <grpcpp/impl/codegen/server_callback_handlers.h>
-#include <grpcpp/server_context.h>
-#include <grpcpp/impl/service_type.h>
+#include <grpcpp/impl/codegen/server_context.h>
+#include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/status.h>
-#include <grpcpp/support/stub_options.h>
-#include <grpcpp/support/sync_stream.h>
+#include <grpcpp/impl/codegen/stub_options.h>
+#include <grpcpp/impl/codegen/sync_stream.h>
 
 namespace pc2sms {
 
@@ -51,17 +52,35 @@ class sms final {
     std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::pc2sms::SMS>> PrepareAsynclistenSMSToSend(::grpc::ClientContext* context, const ::pc2sms::Credentials& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::pc2sms::SMS>>(PrepareAsynclistenSMSToSendRaw(context, request, cq));
     }
-    class async_interface {
+    class experimental_async_interface {
      public:
-      virtual ~async_interface() {}
+      virtual ~experimental_async_interface() {}
       virtual void requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void listenSMSToSend(::grpc::ClientContext* context, const ::pc2sms::Credentials* request, ::grpc::ClientReadReactor< ::pc2sms::SMS>* reactor) = 0;
+      #else
+      virtual void requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void listenSMSToSend(::grpc::ClientContext* context, ::pc2sms::Credentials* request, ::grpc::ClientReadReactor< ::pc2sms::SMS>* reactor) = 0;
+      #else
+      virtual void listenSMSToSend(::grpc::ClientContext* context, ::pc2sms::Credentials* request, ::grpc::experimental::ClientReadReactor< ::pc2sms::SMS>* reactor) = 0;
+      #endif
     };
-    typedef class async_interface experimental_async_interface;
-    virtual class async_interface* async() { return nullptr; }
-    class async_interface* experimental_async() { return async(); }
-   private:
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    typedef class experimental_async_interface async_interface;
+    #endif
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    async_interface* async() { return experimental_async(); }
+    #endif
+    virtual class experimental_async_interface* experimental_async() { return nullptr; }
+  private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::pc2sms::ResponseCommand>* AsyncrequestToSendRaw(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::pc2sms::ResponseCommand>* PrepareAsyncrequestToSendRaw(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientReaderInterface< ::pc2sms::SMS>* listenSMSToSendRaw(::grpc::ClientContext* context, const ::pc2sms::Credentials& request) = 0;
@@ -70,7 +89,7 @@ class sms final {
   };
   class Stub final : public StubInterface {
    public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
     ::grpc::Status requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::pc2sms::ResponseCommand* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::pc2sms::ResponseCommand>> AsyncrequestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::pc2sms::ResponseCommand>>(AsyncrequestToSendRaw(context, request, cq));
@@ -87,23 +106,37 @@ class sms final {
     std::unique_ptr< ::grpc::ClientAsyncReader< ::pc2sms::SMS>> PrepareAsynclistenSMSToSend(::grpc::ClientContext* context, const ::pc2sms::Credentials& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReader< ::pc2sms::SMS>>(PrepareAsynclistenSMSToSendRaw(context, request, cq));
     }
-    class async final :
-      public StubInterface::async_interface {
+    class experimental_async final :
+      public StubInterface::experimental_async_interface {
      public:
       void requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, std::function<void(::grpc::Status)>) override;
+      void requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void listenSMSToSend(::grpc::ClientContext* context, const ::pc2sms::Credentials* request, ::grpc::ClientReadReactor< ::pc2sms::SMS>* reactor) override;
+      #else
+      void requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void listenSMSToSend(::grpc::ClientContext* context, ::pc2sms::Credentials* request, ::grpc::ClientReadReactor< ::pc2sms::SMS>* reactor) override;
+      #else
+      void listenSMSToSend(::grpc::ClientContext* context, ::pc2sms::Credentials* request, ::grpc::experimental::ClientReadReactor< ::pc2sms::SMS>* reactor) override;
+      #endif
      private:
       friend class Stub;
-      explicit async(Stub* stub): stub_(stub) { }
+      explicit experimental_async(Stub* stub): stub_(stub) { }
       Stub* stub() { return stub_; }
       Stub* stub_;
     };
-    class async* async() override { return &async_stub_; }
+    class experimental_async_interface* experimental_async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    class async async_stub_{this};
+    class experimental_async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::pc2sms::ResponseCommand>* AsyncrequestToSendRaw(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::pc2sms::ResponseCommand>* PrepareAsyncrequestToSendRaw(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientReader< ::pc2sms::SMS>* listenSMSToSendRaw(::grpc::ClientContext* context, const ::pc2sms::Credentials& request) override;
@@ -163,22 +196,36 @@ class sms final {
   };
   typedef WithAsyncMethod_requestToSend<WithAsyncMethod_listenSMSToSend<Service > > AsyncService;
   template <class BaseClass>
-  class WithCallbackMethod_requestToSend : public BaseClass {
+  class ExperimentalWithCallbackMethod_requestToSend : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithCallbackMethod_requestToSend() {
-      ::grpc::Service::MarkMethodCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>(
+    ExperimentalWithCallbackMethod_requestToSend() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(0,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response) { return this->requestToSend(context, request, response); }));}
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response) { return this->requestToSend(context, request, response); }));}
     void SetMessageAllocatorFor_requestToSend(
-        ::grpc::MessageAllocator< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>* allocator) {
+        ::grpc::experimental::MessageAllocator< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>*>(handler)
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
+    #endif
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~WithCallbackMethod_requestToSend() override {
+    ~ExperimentalWithCallbackMethod_requestToSend() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -186,21 +233,37 @@ class sms final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* requestToSend(
-      ::grpc::CallbackServerContext* /*context*/, const ::pc2sms::RequestCommand* /*request*/, ::pc2sms::ResponseCommand* /*response*/)  { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::pc2sms::RequestCommand* /*request*/, ::pc2sms::ResponseCommand* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* requestToSend(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::pc2sms::RequestCommand* /*request*/, ::pc2sms::ResponseCommand* /*response*/)
+    #endif
+      { return nullptr; }
   };
   template <class BaseClass>
-  class WithCallbackMethod_listenSMSToSend : public BaseClass {
+  class ExperimentalWithCallbackMethod_listenSMSToSend : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithCallbackMethod_listenSMSToSend() {
-      ::grpc::Service::MarkMethodCallback(1,
-          new ::grpc::internal::CallbackServerStreamingHandler< ::pc2sms::Credentials, ::pc2sms::SMS>(
+    ExperimentalWithCallbackMethod_listenSMSToSend() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(1,
+          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::pc2sms::Credentials, ::pc2sms::SMS>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::pc2sms::Credentials* request) { return this->listenSMSToSend(context, request); }));
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::pc2sms::Credentials* request) { return this->listenSMSToSend(context, request); }));
     }
-    ~WithCallbackMethod_listenSMSToSend() override {
+    ~ExperimentalWithCallbackMethod_listenSMSToSend() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -208,11 +271,20 @@ class sms final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::pc2sms::SMS>* listenSMSToSend(
-      ::grpc::CallbackServerContext* /*context*/, const ::pc2sms::Credentials* /*request*/)  { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::pc2sms::Credentials* /*request*/)
+    #else
+    virtual ::grpc::experimental::ServerWriteReactor< ::pc2sms::SMS>* listenSMSToSend(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::pc2sms::Credentials* /*request*/)
+    #endif
+      { return nullptr; }
   };
-  typedef WithCallbackMethod_requestToSend<WithCallbackMethod_listenSMSToSend<Service > > CallbackService;
-  typedef CallbackService ExperimentalCallbackService;
+  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+  typedef ExperimentalWithCallbackMethod_requestToSend<ExperimentalWithCallbackMethod_listenSMSToSend<Service > > CallbackService;
+  #endif
+
+  typedef ExperimentalWithCallbackMethod_requestToSend<ExperimentalWithCallbackMethod_listenSMSToSend<Service > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_requestToSend : public BaseClass {
    private:
@@ -288,17 +360,27 @@ class sms final {
     }
   };
   template <class BaseClass>
-  class WithRawCallbackMethod_requestToSend : public BaseClass {
+  class ExperimentalWithRawCallbackMethod_requestToSend : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawCallbackMethod_requestToSend() {
-      ::grpc::Service::MarkMethodRawCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    ExperimentalWithRawCallbackMethod_requestToSend() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(0,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->requestToSend(context, request, response); }));
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->requestToSend(context, request, response); }));
     }
-    ~WithRawCallbackMethod_requestToSend() override {
+    ~ExperimentalWithRawCallbackMethod_requestToSend() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -306,21 +388,37 @@ class sms final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* requestToSend(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* requestToSend(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
   };
   template <class BaseClass>
-  class WithRawCallbackMethod_listenSMSToSend : public BaseClass {
+  class ExperimentalWithRawCallbackMethod_listenSMSToSend : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawCallbackMethod_listenSMSToSend() {
-      ::grpc::Service::MarkMethodRawCallback(1,
-          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    ExperimentalWithRawCallbackMethod_listenSMSToSend() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(1,
+          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-                   ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->listenSMSToSend(context, request); }));
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const::grpc::ByteBuffer* request) { return this->listenSMSToSend(context, request); }));
     }
-    ~WithRawCallbackMethod_listenSMSToSend() override {
+    ~ExperimentalWithRawCallbackMethod_listenSMSToSend() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -328,8 +426,14 @@ class sms final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::grpc::ByteBuffer>* listenSMSToSend(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)  { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
+    #else
+    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* listenSMSToSend(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
+    #endif
+      { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_requestToSend : public BaseClass {
@@ -340,8 +444,8 @@ class sms final {
       ::grpc::Service::MarkMethodStreamed(0,
         new ::grpc::internal::StreamedUnaryHandler<
           ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
                      ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>* streamer) {
                        return this->StreamedrequestToSend(context,
                          streamer);
@@ -368,8 +472,8 @@ class sms final {
       ::grpc::Service::MarkMethodStreamed(1,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::pc2sms::Credentials, ::pc2sms::SMS>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerSplitStreamer<
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerSplitStreamer<
                      ::pc2sms::Credentials, ::pc2sms::SMS>* streamer) {
                        return this->StreamedlistenSMSToSend(context,
                          streamer);

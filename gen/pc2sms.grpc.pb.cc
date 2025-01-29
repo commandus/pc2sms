@@ -6,19 +6,19 @@
 #include "pc2sms.grpc.pb.h"
 
 #include <functional>
-#include <grpcpp/support/async_stream.h>
-#include <grpcpp/support/async_unary_call.h>
-#include <grpcpp/impl/channel_interface.h>
-#include <grpcpp/impl/client_unary_call.h>
-#include <grpcpp/support/client_callback.h>
-#include <grpcpp/support/message_allocator.h>
-#include <grpcpp/support/method_handler.h>
-#include <grpcpp/impl/rpc_service_method.h>
-#include <grpcpp/support/server_callback.h>
+#include <grpcpp/impl/codegen/async_stream.h>
+#include <grpcpp/impl/codegen/async_unary_call.h>
+#include <grpcpp/impl/codegen/channel_interface.h>
+#include <grpcpp/impl/codegen/client_unary_call.h>
+#include <grpcpp/impl/codegen/client_callback.h>
+#include <grpcpp/impl/codegen/message_allocator.h>
+#include <grpcpp/impl/codegen/method_handler.h>
+#include <grpcpp/impl/codegen/rpc_service_method.h>
+#include <grpcpp/impl/codegen/server_callback.h>
 #include <grpcpp/impl/codegen/server_callback_handlers.h>
-#include <grpcpp/server_context.h>
-#include <grpcpp/impl/service_type.h>
-#include <grpcpp/support/sync_stream.h>
+#include <grpcpp/impl/codegen/server_context.h>
+#include <grpcpp/impl/codegen/service_type.h>
+#include <grpcpp/impl/codegen/sync_stream.h>
 namespace pc2sms {
 
 static const char* sms_method_names[] = {
@@ -28,61 +28,66 @@ static const char* sms_method_names[] = {
 
 std::unique_ptr< sms::Stub> sms::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< sms::Stub> stub(new sms::Stub(channel, options));
+  std::unique_ptr< sms::Stub> stub(new sms::Stub(channel));
   return stub;
 }
 
-sms::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
-  : channel_(channel), rpcmethod_requestToSend_(sms_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_listenSMSToSend_(sms_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+sms::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
+  : channel_(channel), rpcmethod_requestToSend_(sms_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_listenSMSToSend_(sms_method_names[1], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   {}
 
 ::grpc::Status sms::Stub::requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::pc2sms::ResponseCommand* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_requestToSend_, context, request, response);
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_requestToSend_, context, request, response);
 }
 
-void sms::Stub::async::requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_requestToSend_, context, request, response, std::move(f));
+void sms::Stub::experimental_async::requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_requestToSend_, context, request, response, std::move(f));
 }
 
-void sms::Stub::async::requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, ::grpc::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_requestToSend_, context, request, response, reactor);
+void sms::Stub::experimental_async::requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_requestToSend_, context, request, response, std::move(f));
 }
 
-::grpc::ClientAsyncResponseReader< ::pc2sms::ResponseCommand>* sms::Stub::PrepareAsyncrequestToSendRaw(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::pc2sms::ResponseCommand, ::pc2sms::RequestCommand, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_requestToSend_, context, request);
+void sms::Stub::experimental_async::requestToSend(::grpc::ClientContext* context, const ::pc2sms::RequestCommand* request, ::pc2sms::ResponseCommand* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_requestToSend_, context, request, response, reactor);
+}
+
+void sms::Stub::experimental_async::requestToSend(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::pc2sms::ResponseCommand* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_requestToSend_, context, request, response, reactor);
 }
 
 ::grpc::ClientAsyncResponseReader< ::pc2sms::ResponseCommand>* sms::Stub::AsyncrequestToSendRaw(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) {
-  auto* result =
-    this->PrepareAsyncrequestToSendRaw(context, request, cq);
-  result->StartCall();
-  return result;
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::pc2sms::ResponseCommand>::Create(channel_.get(), cq, rpcmethod_requestToSend_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::pc2sms::ResponseCommand>* sms::Stub::PrepareAsyncrequestToSendRaw(::grpc::ClientContext* context, const ::pc2sms::RequestCommand& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::pc2sms::ResponseCommand>::Create(channel_.get(), cq, rpcmethod_requestToSend_, context, request, false);
 }
 
 ::grpc::ClientReader< ::pc2sms::SMS>* sms::Stub::listenSMSToSendRaw(::grpc::ClientContext* context, const ::pc2sms::Credentials& request) {
-  return ::grpc::internal::ClientReaderFactory< ::pc2sms::SMS>::Create(channel_.get(), rpcmethod_listenSMSToSend_, context, request);
+  return ::grpc_impl::internal::ClientReaderFactory< ::pc2sms::SMS>::Create(channel_.get(), rpcmethod_listenSMSToSend_, context, request);
 }
 
-void sms::Stub::async::listenSMSToSend(::grpc::ClientContext* context, const ::pc2sms::Credentials* request, ::grpc::ClientReadReactor< ::pc2sms::SMS>* reactor) {
-  ::grpc::internal::ClientCallbackReaderFactory< ::pc2sms::SMS>::Create(stub_->channel_.get(), stub_->rpcmethod_listenSMSToSend_, context, request, reactor);
+void sms::Stub::experimental_async::listenSMSToSend(::grpc::ClientContext* context, ::pc2sms::Credentials* request, ::grpc::experimental::ClientReadReactor< ::pc2sms::SMS>* reactor) {
+  ::grpc_impl::internal::ClientCallbackReaderFactory< ::pc2sms::SMS>::Create(stub_->channel_.get(), stub_->rpcmethod_listenSMSToSend_, context, request, reactor);
 }
 
 ::grpc::ClientAsyncReader< ::pc2sms::SMS>* sms::Stub::AsynclistenSMSToSendRaw(::grpc::ClientContext* context, const ::pc2sms::Credentials& request, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::pc2sms::SMS>::Create(channel_.get(), cq, rpcmethod_listenSMSToSend_, context, request, true, tag);
+  return ::grpc_impl::internal::ClientAsyncReaderFactory< ::pc2sms::SMS>::Create(channel_.get(), cq, rpcmethod_listenSMSToSend_, context, request, true, tag);
 }
 
 ::grpc::ClientAsyncReader< ::pc2sms::SMS>* sms::Stub::PrepareAsynclistenSMSToSendRaw(::grpc::ClientContext* context, const ::pc2sms::Credentials& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::pc2sms::SMS>::Create(channel_.get(), cq, rpcmethod_listenSMSToSend_, context, request, false, nullptr);
+  return ::grpc_impl::internal::ClientAsyncReaderFactory< ::pc2sms::SMS>::Create(channel_.get(), cq, rpcmethod_listenSMSToSend_, context, request, false, nullptr);
 }
 
 sms::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       sms_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< sms::Service, ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+      new ::grpc::internal::RpcMethodHandler< sms::Service, ::pc2sms::RequestCommand, ::pc2sms::ResponseCommand>(
           [](sms::Service* service,
-             ::grpc::ServerContext* ctx,
+             ::grpc_impl::ServerContext* ctx,
              const ::pc2sms::RequestCommand* req,
              ::pc2sms::ResponseCommand* resp) {
                return service->requestToSend(ctx, req, resp);
@@ -92,9 +97,9 @@ sms::Service::Service() {
       ::grpc::internal::RpcMethod::SERVER_STREAMING,
       new ::grpc::internal::ServerStreamingHandler< sms::Service, ::pc2sms::Credentials, ::pc2sms::SMS>(
           [](sms::Service* service,
-             ::grpc::ServerContext* ctx,
+             ::grpc_impl::ServerContext* ctx,
              const ::pc2sms::Credentials* req,
-             ::grpc::ServerWriter<::pc2sms::SMS>* writer) {
+             ::grpc_impl::ServerWriter<::pc2sms::SMS>* writer) {
                return service->listenSMSToSend(ctx, req, writer);
              }, this)));
 }
