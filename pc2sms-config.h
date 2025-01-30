@@ -12,6 +12,8 @@ public:
     std::string password;
     NotifyPolicy policy;
     bool daemonize;
+
+    std::string toString() const;
 };
 
 /**

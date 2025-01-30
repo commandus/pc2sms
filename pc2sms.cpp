@@ -138,7 +138,10 @@ int main(int argc, char **argv) {
 	}
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
-	if (cfg.daemonize) {
+    if (verbosity)
+        std::cout << cfg.toString() << std::endl;
+
+    if (cfg.daemonize) {
 		if (verbosity > 1)
 			std::cerr << MSG_DAEMON_STARTED << getCurrentDir() << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
 		Daemonize daemonize(progname, getCurrentDir(), run, stop, done);

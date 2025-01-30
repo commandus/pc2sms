@@ -77,23 +77,23 @@ int ListenSMS::enqueue(
         // select next phone
         if (lastResponder) {
             std::vector<ListenData*>::iterator it = std::find(listenResponders.begin(), listenResponders.end(), lastResponder);
-            if (it != listenResponders.end()) {
+            if (it != listenResponders.end())
                 it++;
-            }
-            if (it == listenResponders.end()) {
+            if (it == listenResponders.end())
                 it = listenResponders.begin();
-            }
             if (it != listenResponders.end()) {
+                lastResponder = *it;
+                if (lastResponder) {
+                    lastResponder->enqueue(values);
+                    r++;
+                }
             }
-            lastResponder = *it;
-            if (lastResponder) {
+        } else {
+            if (!listenResponders.empty()) {
+                lastResponder = *listenResponders.begin();
                 lastResponder->enqueue(values);
                 r++;
             }
-        } else {
-            lastResponder = *listenResponders.begin();
-            lastResponder->enqueue(values);
-            r++;
         }
       }
       mutexList.unlock();

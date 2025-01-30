@@ -29,7 +29,7 @@ int parseServiceConfig(
         if (s.empty()) {
             retVal.policy = NP_ROUND_ROBIN;
         } else {
-            retVal.policy = (s.find('a') == std::string::npos) ? NP_ALL : NP_ROUND_ROBIN;
+            retVal.policy = (s.find('a') != std::string::npos) ? NP_ALL : NP_ROUND_ROBIN;
         }
     }
     if (std::getline(ss, s,'\n')) {
@@ -40,4 +40,11 @@ int parseServiceConfig(
         }
     }
 	return 0;
+}
+
+std::string Pc2SmsConfig::toString() const {
+    std::stringstream ss;
+    ss << "Listen " << listenAddress << " user credentials " << login << "/" << password << "\n";
+    ss << (policy == NP_ROUND_ROBIN ? "Send SMS from one of all connected phones in turn" : "Send SMS from all connected phones at once");
+    return ss.str();
 }

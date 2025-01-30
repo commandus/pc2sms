@@ -218,39 +218,43 @@ bool ListenData::writeNext()
  * check paramater successfulEvent = false 
  *  
  */
-void ListenData::Proceed(bool successfulEvent) 
-{
-  switch (status) {
-  case CREATE:
-    status = LISTEN_COMMAND;
-    service->RequestlistenSMSToSend(&ctx, &credentials, &responder, cq, cq, this);
-    break;
-  case LISTEN_COMMAND:
-    if (!new_responder_created) {
-      new ListenData(smsService);
-      new_responder_created = true;
-      smsService->clientsListenSMS.put(this);
-      break;
-		}
-    if (result.empty()) { // if (ctx.IsCancelled()) { == ctx.AsyncNotifyWhenDone(this);
-      status = FINISH;
-      smsService->clientsListenSMS.rm(this);
-      responder.Finish(grpc::Status(), (void*) this);
-      break;
+void ListenData::Proceed(
+    bool successfulEvent
+) {
+    switch (status) {
+        case CREATE:
+            status = LISTEN_COMMAND;
+            service->RequestlistenSMSToSend(&ctx, &credentials, &responder, cq, cq, this);
+            if (smsService->queuingMgr->smsCountReady2Send() > 0) {
+                smsService->queuingMgr->wakeUp();
+            }
+            break;
+        case LISTEN_COMMAND:
+            if (!new_responder_created) {
+                new ListenData(smsService);
+                new_responder_created = true;
+                smsService->clientsListenSMS.put(this);
+                break;
+		    }
+            if (result.empty()) { // if (ctx.IsCancelled()) { == ctx.AsyncNotifyWhenDone(this);
+                status = FINISH;
+                smsService->clientsListenSMS.rm(this);
+                responder.Finish(grpc::Status(), (void*) this);
+            break;
+        }
+        writeNext();
+        status = LISTEN_COMMAND_SENT;
+        break;
+    case LISTEN_COMMAND_SENT:
+        if (!writeNext())
+            status = LISTEN_COMMAND;
+        break;
+    case FINISH:
+        delete this;
+        break;
+    default:
+        break;
     }
-    writeNext();
-    status = LISTEN_COMMAND_SENT;
-    break;
-  case LISTEN_COMMAND_SENT:
-    if (!writeNext())
-      status = LISTEN_COMMAND;
-    break;
-  case FINISH:
-    delete this;
-    break;
-  default:
-    break;
-  }
 }
 
 /**
@@ -297,8 +301,7 @@ void QueuingMgr::enqueue(
 ) {
     // completion queue alarm
     std::copy(values.begin(), values.end(), std::back_inserter(result));
-    grpc::Alarm alarm;
-    alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+    wakeUp();
 }
 
 void QueuingMgr::enqueue(
@@ -306,6 +309,10 @@ void QueuingMgr::enqueue(
 ) {
     // completion queue alarm
     result.push_back(value);
+    wakeUp();
+}
+
+void QueuingMgr::wakeUp() {
     grpc::Alarm alarm;
     alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
 }
@@ -319,4 +326,8 @@ void QueuingMgr::Proceed(bool successfulEvent) {
   int cnt = smsService->clientsListenSMS.enqueue(result);
   if (cnt > 0)
       result.clear();
+}
+
+int QueuingMgr::smsCountReady2Send() const {
+    return result.size();
 }

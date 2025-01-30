@@ -125,8 +125,11 @@ class QueuingMgr : public CommonCallData {
         // with the gRPC runtime.
         QueuingMgr(SMSServiceImpl *sms_service);
         virtual void Proceed(bool = true) override;
+        void wakeUp();
         void enqueue(const std::vector<pc2sms::SMS> &values);
         void enqueue(const pc2sms::SMS &value);
-    };
+
+    int smsCountReady2Send() const;
+};
 
 #endif
