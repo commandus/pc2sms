@@ -316,5 +316,7 @@ void QueuingMgr::enqueue(
 void QueuingMgr::Proceed(bool successfulEvent) {
   if (result.empty())
     return;
-  smsService->clientsListenSMS.enqueue(result);
+  int cnt = smsService->clientsListenSMS.enqueue(result);
+  if (cnt > 0)
+      result.clear();
 }

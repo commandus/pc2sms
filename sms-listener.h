@@ -35,7 +35,12 @@ public:
   void printListenResponders();
   void put(ListenData *value);
   bool rm(ListenData *value);
-  void enqueue(const std::vector<pc2sms::SMS> &values);
+  /**
+   *
+   * @param values SMS to be send
+   * @return count of recipients
+   */
+  int enqueue(const std::vector<pc2sms::SMS> &values);
 };
 
 #endif

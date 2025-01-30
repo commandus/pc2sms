@@ -63,33 +63,39 @@ bool ListenSMS::rm(ListenData *value)
   return false;
 }
 
-void ListenSMS::enqueue(
-  const std::vector<pc2sms::SMS> &values
+int ListenSMS::enqueue(
+    const std::vector<pc2sms::SMS> &values
 ) {
-  mutexList.lock();
-  if (policy == NP_ALL) {
-    for (std::vector<ListenData*>::iterator it(listenResponders.begin()); it != listenResponders.end(); ++it) {
-      (*it)->enqueue(values);
-    }
-  } else {
-    // select next phone
-    if (lastResponder) {
-      std::vector<ListenData*>::iterator it = std::find(listenResponders.begin(), listenResponders.end(), lastResponder);
-      if (it != listenResponders.end()) {
-        it++;
-      }
-      if (it == listenResponders.end()) {
-        it = listenResponders.begin();
-      }
-      if (it != listenResponders.end()) {
-      }
-      lastResponder = *it;
-      if (lastResponder)
-        lastResponder->enqueue(values);
+    int r = 0;
+    mutexList.lock();
+    if (policy == NP_ALL) {
+        for (std::vector<ListenData*>::iterator it(listenResponders.begin()); it != listenResponders.end(); ++it) {
+            (*it)->enqueue(values);
+            r++;
+        }
     } else {
-      lastResponder = *listenResponders.begin();
-      lastResponder->enqueue(values);
-    }
-  }
-  mutexList.unlock();
+        // select next phone
+        if (lastResponder) {
+            std::vector<ListenData*>::iterator it = std::find(listenResponders.begin(), listenResponders.end(), lastResponder);
+            if (it != listenResponders.end()) {
+                it++;
+            }
+            if (it == listenResponders.end()) {
+                it = listenResponders.begin();
+            }
+            if (it != listenResponders.end()) {
+            }
+            lastResponder = *it;
+            if (lastResponder) {
+                lastResponder->enqueue(values);
+                r++;
+            }
+        } else {
+            lastResponder = *listenResponders.begin();
+            lastResponder->enqueue(values);
+            r++;
+        }
+      }
+      mutexList.unlock();
+    return r;
 }
