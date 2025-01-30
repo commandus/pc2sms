@@ -4,8 +4,13 @@
 #include <thread>
 #include <queue>
 
-#include <grpcpp/grpcpp.h>
 #include "pc2sms.grpc.pb.h"
+#if 3021012 < PROTOBUF_MIN_PROTOC_VERSION
+#include <grpc++/grpc++.h>
+#else
+#include <grpcpp/grpcpp.h>
+#endif
+
 #include "sms-listener.h"
 
 class QueuingMgr;

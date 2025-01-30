@@ -1,7 +1,13 @@
 #include "service-raw.h"
 
 #include <sstream>
+
+#if 3021012 < PROTOBUF_MIN_PROTOC_VERSION
+#include <grpc++/alarm.h>
+#else
 #include <grpcpp/alarm.h>
+#endif
+
 #include <google/protobuf/util/json_util.h>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
