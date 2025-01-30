@@ -116,16 +116,17 @@ class ListenData : public CommonCallData {
  * Enqueue ListenData after signal a new SMS to send request arrived
  */
 class QueuingMgr : public CommonCallData {
-  private:
-    SMSServiceImpl *smsService;
-    std::vector<pc2sms::SMS> result;
-  public:
-    // Take in the "service" instance (in this case representing an asynchronous
-    // server) and the completion queue "cq" used for asynchronous communication
-    // with the gRPC runtime.
-    QueuingMgr(SMSServiceImpl *sms_service);
-    virtual void Proceed(bool = true) override;
-    void enqueue(const std::vector<pc2sms::SMS> &values);
-};
+    private:
+        SMSServiceImpl *smsService;
+        std::vector<pc2sms::SMS> result;
+    public:
+        // Take in the "service" instance (in this case representing an asynchronous
+        // server) and the completion queue "cq" used for asynchronous communication
+        // with the gRPC runtime.
+        QueuingMgr(SMSServiceImpl *sms_service);
+        virtual void Proceed(bool = true) override;
+        void enqueue(const std::vector<pc2sms::SMS> &values);
+        void enqueue(const pc2sms::SMS &value);
+    };
 
 #endif

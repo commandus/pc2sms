@@ -60,6 +60,25 @@ sudo make install
 ./configure CC=clang CXX=clang++
 ```
 
+### Cmake
+
+#### Windows 
+Windows must have vcpkg installed, for instance in the C:\git\vcpkg\ directory.
+
+Then install gRPC and Protobuf using vcpkg.
+
+Provide variables
+
+- CMAKE_TOOLCHAIN_FILE
+- VCPKG_TARGET_TRIPLET (optionally)
+
+to CMake:
+
+```
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=C:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows ..
+```
+
 ## Prerequisites
 
 ## Dependencies

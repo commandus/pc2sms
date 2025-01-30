@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     std::string configFileName = getDefaultConfigFileName(getProgramDir().c_str(), DEF_CONFIG_FILE_NAME);
     std::string configStr = file2string(configFileName.c_str());
     parseServiceConfig(cfg, configStr);
-    if (a_verbosity->count > 0)
+    if (a_daemonize->count > 0)
         cfg.daemonize = true;
 	int verbosity = a_verbosity->count;
 

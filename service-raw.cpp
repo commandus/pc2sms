@@ -127,9 +127,7 @@ RequestToSendData::RequestToSendData(
 
 void RequestToSendData::notifyClients(const pc2sms::SMS &value)
 {
-  std::vector<pc2sms::SMS> values;
-  values.push_back(value);
-  service->queuingMgr->enqueue(values);
+  service->queuingMgr->enqueue(value);
 }
 
 void RequestToSendData::notifyClients(const std::vector<pc2sms::SMS> &values)
@@ -186,16 +184,16 @@ ListenData::ListenData(
 void ListenData::enqueue(
   const std::vector<pc2sms::SMS> &values
 ) {
-  // completion queue alarm
-  for (std::vector<pc2sms::SMS>::const_iterator it = values.begin(); it != values.end(); it++) {
-    result.push(*it);
-  }
-  if (result.empty())
-    return;
-  if (status == LISTEN_COMMAND) {
-    grpc::Alarm alarm;
-    alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
-  }
+    // completion queue alarm
+    for (std::vector<pc2sms::SMS>::const_iterator it = values.begin(); it != values.end(); it++) {
+        result.push(*it);
+    }
+    if (result.empty())
+        return;
+    if (status == LISTEN_COMMAND) {
+        grpc::Alarm alarm;
+        alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+    }
 }
 
 bool ListenData::writeNext()
@@ -297,14 +295,23 @@ QueuingMgr::QueuingMgr(
 void QueuingMgr::enqueue(
   const std::vector<pc2sms::SMS> &values
 ) {
-  // completion queue alarm
-  result = values;
-  grpc::Alarm alarm;
-  alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+    // completion queue alarm
+    std::copy(values.begin(), values.end(), std::back_inserter(result));
+    grpc::Alarm alarm;
+    alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+}
+
+void QueuingMgr::enqueue(
+    const pc2sms::SMS &value
+) {
+    // completion queue alarm
+    result.push_back(value);
+    grpc::Alarm alarm;
+    alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
 }
 
 /**
- * Push into queue ListenTrackData objects from vector of active clients to send notification about tracks
+ * Push into queue SMS objects from vector of active clients to send notification about SMS
  */
 void QueuingMgr::Proceed(bool successfulEvent) {
   if (result.empty())
