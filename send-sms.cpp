@@ -1,10 +1,7 @@
 #include <string>
 #include <sstream>
-#include <vector>
 #include <iostream>
-#include <inttypes.h>
 #include <csignal>
-
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #else
@@ -14,12 +11,10 @@
 #endif
 
 #include "argtable3/argtable3.h"
-
 #include <grpcpp/grpcpp.h>
 #include <google/protobuf/util/json_util.h>
 
 #include "pc2sms.grpc.pb.h"
-
 #include "errlist.h"
 #include "utilstring.h"
 #include "config-filename.h"

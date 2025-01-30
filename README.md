@@ -40,8 +40,19 @@ Phones are selected in turn one by one.
 Install gRPC library, gRPC tools and dependencies:
 
 ```
-sudo apt install  libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc protobuf-c-compiler
+sudo apt install libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc protobuf-c-compiler
 ```
+
+### gRPC versions in Ubuntu's repositories
+
+```
+protoc --version
+```
+
+| Ubuntu version     | protoc --version |
+|--------------------|------------------|
+| Ubuntu 18.04       | libprotoc 3.0.0  |
+| Ubuntu 22.04.4 LTS | libprotoc 3.12.4 |
 
 ### gcc
 

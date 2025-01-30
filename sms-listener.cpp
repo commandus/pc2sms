@@ -1,16 +1,12 @@
 #include <sstream>
 #include <algorithm>
 
-#include <fcntl.h>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #else
 #include <sys/un.h>
 #include <unistd.h>
 #endif
-
-#include <grpcpp/grpcpp.h>
-#include <grpc/support/log.h>
 
 #include "errlist.h"
 #include "platform.h"

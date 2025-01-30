@@ -3,9 +3,6 @@
 
 #include <vector>
 #include <mutex>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/alarm.h>
-
 #include "pc2sms.grpc.pb.h"
 
 class SMSServiceImpl;
