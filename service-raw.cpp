@@ -2,11 +2,9 @@
 
 #include <sstream>
 #include <grpcpp/grpcpp.h>
-#include <grpc/support/log.h>
 
 #include <google/protobuf/util/json_util.h>
 
-#include <fcntl.h>
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #else
 #include <sys/un.h>
@@ -30,7 +28,7 @@ SMSServiceImpl::SMSServiceImpl(
     NotifyPolicy apolicy
 )
   : address(a_grpc_listener_address), login(a_login), password(a_password),
-    clientsListenSMS(this, apolicy), queuingMgr(NULL), running(false)
+    clientsListenSMS(this, apolicy), queuingMgr(nullptr), running(false)
 {
   start();
 }
@@ -46,7 +44,7 @@ void SMSServiceImpl::stop() {
   
   if (queuingMgr) {
     delete queuingMgr;
-    queuingMgr = NULL;
+    queuingMgr = nullptr;
   }
   std::cerr << MSG_SERVICE_STOPPED << std::endl;
 }
