@@ -4,6 +4,7 @@
 #include <thread>
 #include <queue>
 
+#include <grpcpp/grpcpp.h>
 #include "pc2sms.grpc.pb.h"
 #include "sms-listener.h"
 

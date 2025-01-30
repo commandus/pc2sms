@@ -1,10 +1,8 @@
 #include "service-raw.h"
 
 #include <sstream>
-#include <grpcpp/grpcpp.h>
-
-#include <google/protobuf/util/json_util.h>
 #include <grpcpp/alarm.h>
+#include <google/protobuf/util/json_util.h>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #else
