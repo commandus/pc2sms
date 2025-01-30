@@ -24,20 +24,21 @@
 #include "utilstring.h"
 #include "config-filename.h"
 #include "send-sms-config.h"
+#include "file-helper.h"
 
 static bool stopped = false;
 
 const std::string progname = "send-sms";
-#define  DEF_CONFIG_FILE_NAME ".send-sms"
+#define DEF_CONFIG_FILE_NAME    ".pc2sms"
 
 static void done()
 {
-  exit(0);
+    exit(0);
 }
 
 static void stop()
 {
-  stopped = true;
+    stopped = true;
 }
 
 static void printTrace() {
@@ -93,27 +94,27 @@ void setSignalHandler()
  **/
 int parseCmd
 (
-  std::string &service,
-  std::string &login,
-  std::string &password,
-  std::string &phoneNumber,
-  std::string &message,
-  int &verbosity,
-  bool &listen,
-	int argc,
-	char* argv[]
-)
+    std::string &service,
+    std::string &login,
+    std::string &password,
+    std::string &phoneNumber,
+    std::string &message,
+    int &verbosity,
+    bool &listen,
+    int argc,
+    char* argv[]
+    )
 {
-  struct arg_str *a_phone_number = arg_str0(NULL, NULL, "<phone-number>", "");
-  // service 
-  struct arg_str *a_service = arg_str0("s", "service", "host:port", "e.g. 167.172.99.203:5002");
-  // 
-  struct arg_str *a_login = arg_str0("u", "user", "<login>", "service login");
-  struct arg_str *a_password = arg_str0("p", "password", "<password>", "service password");
-  struct arg_str *a_message = arg_str0("m", "message", "<text>", "If not specified, read from stdin");
-  struct arg_lit *a_listen = arg_lit0("l", "listen", "Listen mode (debug)");
+    struct arg_str *a_phone_number = arg_str0(nullptr, nullptr, "<phone-number>", "");
+    // service
+    struct arg_str *a_service = arg_str0("s", "service", "host:port", "Default localhost:50053" );
+    //
+    struct arg_str *a_login = arg_str0("u", "user", "<login>", "service login");
+    struct arg_str *a_password = arg_str0("p", "password", "<password>", "service password");
+    struct arg_str *a_message = arg_str0("m", "message", "<text>", "If not specified, read from stdin");
+    struct arg_lit *a_listen = arg_lit0("l", "listen", "Listen mode (debug)");
 
-  struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
+    struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
 	struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
@@ -126,61 +127,59 @@ int parseCmd
 	int nerrors;
 
 	// verify the argtable[] entries were allocated successfully
-	if (arg_nullcheck(argtable) != 0)
-	{
+	if (arg_nullcheck(argtable) != 0) {
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return 1;
 	}
 	// Parse the command line as defined by argtable[]
 	nerrors = arg_parse(argc, argv, argtable);
 
-  if (a_phone_number->count) {
-    phoneNumber = *a_phone_number->sval;
-  }
-  if (a_service->count) {
-    service = *a_service->sval;
-  }
-  if (a_login->count) {
-    login = *a_login->sval;
-  }
-  if (a_password->count) {
-    password = *a_password->sval;
-  }
-  if (a_message->count) {
-    message = *a_message->sval;
-  }
-  listen = a_listen->count > 0;
+    if (a_phone_number->count) {
+        phoneNumber = *a_phone_number->sval;
+    }
+    if (a_service->count) {
+        service = *a_service->sval;
+    }
+    if (a_login->count) {
+        login = *a_login->sval;
+    }
+    if (a_password->count) {
+        password = *a_password->sval;
+    }
+    if (a_message->count) {
+        message = *a_message->sval;
+    }
+    listen = a_listen->count > 0;
 
-  verbosity = a_verbosity->count;
+    verbosity = a_verbosity->count;
 
-	// special case: '--help' takes precedence over error reporting
-	if ((a_help->count) || nerrors)
-	{
-		if (nerrors)
-			arg_print_errors(stderr, a_end, progname.c_str());
-		std::cerr << "Usage: " << progname << std::endl;
-		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "Command line SMS send utility" << std::endl;
-		arg_print_glossary(stderr, argtable, "  %-25s %s\n");
-		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-		return 1;
-	}
+    // special case: '--help' takes precedence over error reporting
+    if ((a_help->count) || nerrors)	{
+        if (nerrors)
+            arg_print_errors(stderr, a_end, progname.c_str());
+        std::cerr << "Usage: " << progname << std::endl;
+        arg_print_syntax(stderr, argtable, "\n");
+        std::cerr << "Command line SMS send utility" << std::endl;
+        arg_print_glossary(stderr, argtable, "  %-25s %s\n");
+        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+        return 1;
+    }
 
-	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-	return 0;
+    arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+    return 0;
 }
 
 static std::string mkServiceUrl(
   const std::string &svc
 ) {
-  if (svc.empty())
-    return "localhost:50053";
-  else
-    return svc;    
+    if (svc.empty())
+        return "localhost:50053";
+    else
+        return svc;
 }
 
 static std::string configString() {
-  std::string fn = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME).c_str();
+  std::string fn = getDefaultConfigFileName(getProgramDir().c_str(), DEF_CONFIG_FILE_NAME).c_str();
   std::string config = file2string(fn.c_str());
   std::stringstream ss;
   ss << fn << std::endl << config << std::endl;
@@ -285,49 +284,42 @@ int main(
 	int argc,
 	char* argv[]
 ) {
-  std::string config = file2string(getDefaultConfigFileName(DEF_CONFIG_FILE_NAME).c_str());
-  std::string listenAddress;
-  std::string login;
-  std::string password;
-  std::string phoneNumber;
-  bool listen;
-  std::string message("");
+    std::string configFileName = getDefaultConfigFileName(getProgramDir().c_str(), DEF_CONFIG_FILE_NAME);
+    std::string configStr = file2string(configFileName.c_str());
+    Pc2SmsClientConfig clientConfig;
+    parseClientConfig(clientConfig, configStr);
+
+    std::string phoneNumber;
+    bool listen;
+    std::string message;
+    int verbosity;
   
-  parseClientConfig(
-    listenAddress,
-    login,
-    password,       
-    config
-  );
+    if (parseCmd(clientConfig.serviceAddress, clientConfig.login, clientConfig.password, phoneNumber, message, verbosity, listen, argc, argv) != 0) {
+        exit(ERR_CODE_COMMAND_LINE);
+    };
 
-  int verbosity;
-  
-  if (parseCmd(listenAddress, login, password, phoneNumber, message, verbosity, listen, argc, argv) != 0) {
-    exit(ERR_CODE_COMMAND_LINE);  
-  };
+    // Signal handler
+    setSignalHandler();
 
-  // Signal handler
-  setSignalHandler();
+    if (!listen) {
+        if (message.empty()) {
+            std::string line;
+            while (std::getline(std::cin, line)) {
+                message += line;
+            }
+        }
 
-  if (!listen) {
-    if (message.empty()) {
-      std::string line;
-      while (std::getline(std::cin, line)) {
-        message += line;
-      }
+        if (message.empty()) {
+            std::cerr << "Error " << ERR_CODE_MESSAGE_EMPTY << ": " << strerror_sms(ERR_CODE_MESSAGE_EMPTY) << std::endl;
+        }
     }
 
-    if (message.empty()) {
-      std::cerr << "Error " << ERR_CODE_MESSAGE_EMPTY << ": " << strerror_sms(ERR_CODE_MESSAGE_EMPTY) << std::endl;
+    int r = run(clientConfig.serviceAddress, clientConfig.login, clientConfig.password, phoneNumber, message, listen, verbosity);
+
+    if (r) {
+        std::cerr << "Error " << r << ": " << strerror_sms(r) << std::endl;
     }
-  }
 
-  int r = run(listenAddress, login, password, phoneNumber, message, listen, verbosity);
-
-  if (r) {
-    std::cerr << "Error " << r << ": " << strerror_sms(r) << std::endl;
-  }
-
-  done();
-  exit(r);
+    done();
+    exit(r);
 }

@@ -5,6 +5,15 @@
 
 #include "sms-listener.h"
 
+class Pc2SmsConfig {
+public:
+    std::string listenAddress;
+    std::string login;
+    std::string password;
+    NotifyPolicy policy;
+    bool daemonize;
+};
+
 /**
  * config file consists of lines:
  *  service address, e.g. localhost:50051
@@ -12,11 +21,8 @@
  *  password
  */
 int parseServiceConfig(
-	std::string &listenAddress,
-    std::string &login,
-    std::string &password,
-    NotifyPolicy &policy,
-    const std::string &config
+    Pc2SmsConfig &retVal,
+    const std::string &configLines
 );
 
 #endif

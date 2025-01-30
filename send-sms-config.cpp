@@ -2,7 +2,7 @@
 #include "send-sms-config.h"
 #include <sstream>
 
-#define DEF_SVC_HOST "167.172.99.203"
+#define DEF_SVC_HOST "82.97.249.193:50053"
 
 /**
  *  config file consists of lines:
@@ -11,23 +11,21 @@
  *  password
  */
 int parseClientConfig(
-	std::string &serviceAddress,
-    std::string &login,
-    std::string &password,
+    Pc2SmsClientConfig &retVal,
     const std::string &config
 ) {
     std::stringstream ss(config);
     std::string s;
     if (std::getline(ss, s,'\n')) {
-        serviceAddress = s;
+        retVal.serviceAddress = s;
     }
     if (std::getline(ss, s,'\n')) {
-        login = s;
+        retVal.login = s;
     }
     if (std::getline(ss, s,'\n')) {
-        password = s;
+        retVal.password = s;
     }
-	if (serviceAddress.empty())
-        serviceAddress = DEF_SVC_HOST;
+	if (retVal.serviceAddress.empty())
+        retVal.serviceAddress = DEF_SVC_HOST;
 	return 0;
 }

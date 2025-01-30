@@ -153,3 +153,26 @@ tiger
 ```
 
 ./send-sms -m 111 18001112222 -vvv
+
+## Windows
+
+Create service to auto-start
+
+```
+sudo sc create pc2sms binPath="C:\git\pc2sms\cmake-build-debug-visual-studio\pc2sms.exe -d" start= manual DisplayName= "Serving gRPC clients for sending SMS messages through connected mobile phones"
+```
+
+Start service manually
+
+```
+sudo sc start pc2sms 
+```
+
+Check service status
+
+```
+sc query pc2sms
+...
+STATE : 4 RUNNING
+... 
+```

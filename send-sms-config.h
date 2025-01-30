@@ -3,6 +3,13 @@
 
 #include <string>
 
+class Pc2SmsClientConfig {
+public:
+    std::string serviceAddress;
+    std::string login;
+    std::string password;
+};
+
 /**
  *  config file consists of lines:
  *  service address
@@ -10,9 +17,7 @@
  *  password
  */
 int parseClientConfig(
-	std::string &serviceAddress,
-    std::string &login,
-    std::string &password,
+    Pc2SmsClientConfig &retVal,
     const std::string &config
 );
 

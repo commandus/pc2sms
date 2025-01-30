@@ -38,7 +38,7 @@ static void stop() {
 }
 
 static void printTrace() {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #else
     void *t[TRACE_BUFFER_SIZE];
     auto size = backtrace(t, TRACE_BUFFER_SIZE);
@@ -64,7 +64,7 @@ void signalHandler(int signal)
 	}
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 // TODO
 void setSignalHandler()
 {
@@ -81,24 +81,11 @@ void setSignalHandler()
 }
 #endif
 
+static Pc2SmsConfig cfg;
+
 void run(
 ) {
-	std::string configFileName = getDefaultConfigFileName(DEF_CONFIG_FILE_NAME);
-    std::string config = file2string(configFileName.c_str());
-    std::string listenAddress;
-    std::string login;
-    std::string password;
-	NotifyPolicy policy;
-
-    parseServiceConfig(
-        listenAddress,
-        login,
-        password,
-		policy,
-		config
-    );
-
-    server = new SMSServiceImpl(listenAddress, login, password, policy);
+    server = new SMSServiceImpl(cfg.listenAddress, cfg.login, cfg.password, cfg.policy);
     server->run();
 }
 
@@ -123,7 +110,12 @@ int main(int argc, char **argv) {
 	int nerrors = arg_parse(argc, argv, argtable);
 
 	uint64_t id = 0;
-	bool daemonize = a_daemonize->count > 0;
+
+    std::string configFileName = getDefaultConfigFileName(getProgramDir().c_str(), DEF_CONFIG_FILE_NAME);
+    std::string configStr = file2string(configFileName.c_str());
+    parseServiceConfig(cfg, configStr);
+    if (a_verbosity->count > 0)
+        cfg.daemonize = true;
 	int verbosity = a_verbosity->count;
 
 	// special case: '--help' takes precedence over error reporting
@@ -132,15 +124,21 @@ int main(int argc, char **argv) {
 			arg_print_errors(stderr, a_end, progname);
 		std::cerr << "Usage: " << progname << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "Serve gRPC clients" << std::endl
-			<< "Config file ~/" DEF_CONFIG_FILE_NAME << std::endl;
+		std::cerr << "Serving gRPC clients for sending SMS messages through connected mobile phones\n"
+			<< "config file " << getDefaultConfigFileName(getProgramDir().c_str(), DEF_CONFIG_FILE_NAME) << '\n'
+            << "or " << getProgramDir() << '\\' << DEF_CONFIG_FILE_NAME << '\n'
+            << "- listen address. Default 0.0.0.0:50053 - all interfaces\n"
+            << "- allowed login\n"
+            << "- password\n"
+            << "- all. Add line \"all\" to send over all connected phones\n"
+            << "- daemonize. Add line \"daemonize\" to force run as daemon\n";
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
 	}
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
-	if (daemonize) {
+	if (cfg.daemonize) {
 		if (verbosity > 1)
 			std::cerr << MSG_DAEMON_STARTED << getCurrentDir() << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
 		Daemonize daemonize(progname, getCurrentDir(), run, stop, done);
