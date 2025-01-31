@@ -5,10 +5,10 @@
 #include <queue>
 
 #include "pc2sms.grpc.pb.h"
-#if 3021012 < PROTOBUF_MIN_PROTOC_VERSION
-#include <grpc++/grpc++.h>
-#else
+#if PROTOBUF_VERSION > 3012000
 #include <grpcpp/grpcpp.h>
+#else
+#include <grpc++/grpc++.h>
 #endif
 
 #include "sms-listener.h"

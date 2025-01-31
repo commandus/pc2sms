@@ -13,10 +13,10 @@
 #include "argtable3/argtable3.h"
 
 #include "pc2sms.grpc.pb.h"
-#if 3021012 < PROTOBUF_MIN_PROTOC_VERSION
-#include <grpc++/grpcpp.h>
+#if PROTOBUF_VERSION > 3012000
+#include <grpc[[/grpcpp.h>
 #else
-#include <grpcpp/grpcpp.h>
+#include <grpc++/grpc++.h>
 #endif
 
 #include <google/protobuf/util/json_util.h>

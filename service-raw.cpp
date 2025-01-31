@@ -2,10 +2,10 @@
 
 #include <sstream>
 
-#if 3021012 < PROTOBUF_MIN_PROTOC_VERSION
-#include <grpc++/alarm.h>
-#else
+#if PROTOBUF_VERSION > 3012000
 #include <grpcpp/alarm.h>
+#else
+#include <grpc++/alarm.h>
 #endif
 
 #include <google/protobuf/util/json_util.h>
@@ -196,11 +196,11 @@ void ListenData::enqueue(
     if (result.empty())
         return;
     if (status == LISTEN_COMMAND) {
-#if 3021012 < PROTOBUF_MIN_PROTOC_VERSION
-        grpc::Alarm alarm(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
-#else
+#if PROTOBUF_VERSION > 3012000
         grpc::Alarm alarm;
         alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+#else
+        grpc::Alarm alarm(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
 #endif
     }
 }
