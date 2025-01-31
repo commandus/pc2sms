@@ -23,12 +23,12 @@
 #define DEF_CONFIG_FILE_NAME    ".pc2sms"
 #define progname                "pc2sms"
 
-SMSServiceImpl *server = NULL;
+SMSServiceImpl *server = nullptr;
 
 static void done() {
-  if (server != NULL) {
+  if (server) {
     delete server;
-    server = NULL;
+    server = nullptr;
   }
 }
 
@@ -56,6 +56,7 @@ void signalHandler(int signal)
 		break;
 	case SIGSEGV:
     {
+        std::cerr << "Segmentation fault\n";
         printTrace();
         exit(ERR_CODE_SEGFAULT);
     }
@@ -75,9 +76,9 @@ void setSignalHandler()
 	struct sigaction action;
 	memset(&action, 0, sizeof(struct sigaction));
 	action.sa_handler = &signalHandler;
-	sigaction(SIGINT, &action, NULL);
-	// sigaction(SIGHUP, &action, NULL);
-  	sigaction(SIGSEGV, &action, NULL);
+	sigaction(SIGINT, &action, nullptr);
+	// sigaction(SIGHUP, &action, nullptr);
+  	sigaction(SIGSEGV, &action, nullptr);
 }
 #endif
 
@@ -85,7 +86,11 @@ static Pc2SmsConfig cfg;
 
 void run(
 ) {
+    if (cfg.verbose)
+        std::cout << "Serve\n";
     server = new SMSServiceImpl(cfg.listenAddress, cfg.login, cfg.password, cfg.policy);
+    if (cfg.verbose)
+        std::cout << "Run\n";
     server->run();
 }
 
@@ -116,7 +121,7 @@ int main(int argc, char **argv) {
     parseServiceConfig(cfg, configStr);
     if (a_daemonize->count > 0)
         cfg.daemonize = true;
-	int verbosity = a_verbosity->count;
+	cfg.verbose = a_verbosity->count;
 
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
@@ -138,11 +143,11 @@ int main(int argc, char **argv) {
 	}
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
-    if (verbosity)
+    if (cfg.verbose)
         std::cout << cfg.toString() << std::endl;
 
     if (cfg.daemonize) {
-		if (verbosity > 1)
+		if (cfg.verbose > 1)
 			std::cerr << MSG_DAEMON_STARTED << getCurrentDir() << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
 		Daemonize daemonize(progname, getCurrentDir(), run, stop, done);
 	} else {

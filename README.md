@@ -102,6 +102,32 @@ cmake -DCMAKE_TOOLCHAIN_FILE=C:\git\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCP
 scp /usr/local/lib/libglog.so.0 root@www.itctrack.ru:/usr/local/lib/
 ```
 
+Ubuntu 18
+
+/lib/x86_64-linux-gnu/libc.so.6
+/lib/x86_64-linux-gnu/libgcc_s.so.1
+/lib/x86_64-linux-gnu/libpthread.so.0
+/lib/x86_64-linux-gnu/libz.so.1
+/lib/x86_64-linux-gnu/librt.so.1
+/lib/x86_64-linux-gnu/libm.so.6
+/lib/x86_64-linux-gnu/libdl.so.2
+
+/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+/usr/lib/x86_64-linux-gnu/libssl.so.1.1
+/usr/lib/x86_64-linux-gnu/libcrypto.so.1.1
+
+/usr/lib/x86_64-linux-gnu/libcares.so.2
+/usr/lib/x86_64-linux-gnu/libprotobuf.so.10
+/usr/lib/libgrpc++.so.1
+/usr/lib/libgpr.so.3
+/usr/lib/libgrpc.so.3
+
+
+scp /usr/lib/x86_64-linux-gnu/libprotobuf.so.10 /usr/lib/libgrpc++.so.1 /usr/lib/libgpr.so.3 /usr/lib/libgrpc.so.3 /usr/lib/x86_64-linux-gnu/libcares.so.2 andrei@lora.commandus.com:~/pc2sms/libs
+mv libcares.so.2 /usr/lib/x86_64-linux-gnu/
+mv libprotobuf.so.10 /usr/lib/x86_64-linux-gnu/
+mv libgrpc++.so.1 libgpr.so.3 libgrpc.so.3 /usr/lib/
+
 ## config file
 
 ~/.pc2sms

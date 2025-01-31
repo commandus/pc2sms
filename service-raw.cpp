@@ -196,12 +196,7 @@ void ListenData::enqueue(
     if (result.empty())
         return;
     if (status == LISTEN_COMMAND) {
-#if PROTOBUF_VERSION > 3012000
-        grpc::Alarm alarm;
-        alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
-#else
-        grpc::Alarm alarm(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
-#endif
+        wakeUp();
     }
 }
 
@@ -266,6 +261,16 @@ void ListenData::Proceed(
     }
 }
 
+void ListenData::wakeUp()
+{
+#if PROTOBUF_VERSION > 3012000
+    grpc::Alarm alarm;
+    alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+#else
+    grpc::Alarm alarm(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+#endif
+}
+
 /**
  * =========== QueuingMgr ===========
  * 
@@ -322,8 +327,12 @@ void QueuingMgr::enqueue(
 }
 
 void QueuingMgr::wakeUp() {
+#if PROTOBUF_VERSION > 3012000
     grpc::Alarm alarm;
     alarm.Set(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+#else
+    grpc::Alarm alarm(cq, gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME), this);
+#endif
 }
 
 /**

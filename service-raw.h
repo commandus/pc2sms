@@ -114,6 +114,8 @@ class ListenData : public CommonCallData {
     ListenData(SMSServiceImpl *sms_service);
     virtual void Proceed(bool = true) override;
     void enqueue(const std::vector<pc2sms::SMS> &values);
+
+    void wakeUp();
 };
 
 /**
