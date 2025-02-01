@@ -1,5 +1,5 @@
 [Unit]
-Description=pc2sms service
+Description=pc2sms
 
 [Service]
 Type=forking
@@ -9,8 +9,8 @@ PIDFile=/var/run/pc2sms.pid
 #
 # Change pc2sms path below
 #
-ExecStart=ExecStart=/home/andrei/pc2sms/pc2sms \
-   -d --pidfile /var/run/pc2sms.pid
+WorkingDirectory=/home/andrei/pc2sms
+ExecStart=/home/andrei/pc2sms/pc2sms -d --pidfile /var/run/pc2sms.pid
 Restart=on-abort
 
 [Install]
