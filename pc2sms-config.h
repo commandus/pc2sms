@@ -13,7 +13,7 @@ public:
     NotifyPolicy policy;
     bool daemonize;
     int verbose;
-
+    std::string pidfile;
     std::string toString() const;
 };
 

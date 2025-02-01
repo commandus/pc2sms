@@ -23,6 +23,12 @@
 #define DEF_CONFIG_FILE_NAME    ".pc2sms"
 #define progname                "pc2sms"
 
+#ifdef ENABLE_LIBUV
+#define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK false
+#else
+#define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK true
+#endif
+
 SMSServiceImpl *server = nullptr;
 
 static void done() {
@@ -96,18 +102,18 @@ void run(
 
 int main(int argc, char **argv) {
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
+    struct arg_str *a_pidfile = arg_str0("p", "pidfile", "<file>", "Check whether a process has created the file pidfile");
 	struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
 	struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = { 
-		a_daemonize, a_verbosity,
+		a_daemonize, a_pidfile, a_verbosity,
 		a_help, a_end 
 	};
 
 	// verify the argtable[] entries were allocated successfully
-	if (arg_nullcheck(argtable) != 0)
-	{
+	if (arg_nullcheck(argtable) != 0) {
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
 	}
@@ -121,6 +127,11 @@ int main(int argc, char **argv) {
     parseServiceConfig(cfg, configStr);
     if (a_daemonize->count > 0)
         cfg.daemonize = true;
+    if (a_pidfile->count)
+        cfg.pidfile = *a_pidfile->sval;
+    else
+        cfg.pidfile = "";
+
 	cfg.verbose = a_verbosity->count;
 
 	// special case: '--help' takes precedence over error reporting
@@ -149,7 +160,8 @@ int main(int argc, char **argv) {
     if (cfg.daemonize) {
 		if (cfg.verbose > 1)
 			std::cerr << MSG_DAEMON_STARTED << getCurrentDir() << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
-		Daemonize daemonize(progname, getCurrentDir(), run, stop, done);
+		Daemonize daemonize(progname, getCurrentDir(), run, stop, done,
+            0, cfg.pidfile, DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK);
 	} else {
 		setSignalHandler();
 		run();

@@ -1,0 +1,17 @@
+[Unit]
+Description=pc2sms service
+
+[Service]
+Type=forking
+# The PID file is optional, but recommended in the manpage
+# "so that systemd can identify the main process of the daemon"
+PIDFile=/var/run/pc2sms.pid
+#
+# Change pc2sms path below
+#
+ExecStart=ExecStart=/home/andrei/pc2sms/pc2sms \
+   -d --pidfile /var/run/pc2sms.pid
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
