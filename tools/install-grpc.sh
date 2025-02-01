@@ -1,9 +1,16 @@
-#! /bin/bash
-# sudo apt-get update
-# sudo apt-get install build-essential autoconf libtool pkg-config libgflags-dev libgtest-dev clang-5.0 libc++-dev
-
+#!/bin/bash
 #
-# TODO It does not work! Clone repository, zipipped version cannot build third parties
+# sudo apt-get update
+# sudo apt-get install build-essential autoconf libtool pkg-config cmake gcc clang
+# git clone https://github.com/grpc/grpc.git
+# git clone -b v1.24.3 https://github.com/grpc/grpc.git
+# cd grpc
+# git submodule update --init
+# make
+# sudo make install
+# sudo cp ./bins/opt/protobuf/protoc /usr/local/sbin
+#
+# TODO It does not work! Clone repository, zipped version cannot build third parties
 #
 GRPC_VERSION=1.24.3
 if [ ! -d grpc-${GRPC_VERSION} ]; then

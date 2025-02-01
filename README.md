@@ -29,11 +29,13 @@ Client utility or library sends a request to send SMS via the service.
 
 Phones are selected in turn one by one.
 
-
 [Android client](https://github.com/commandus/pc2sms-android)
 
 
 ## Build
+
+[Repository](git@github.com:commandus/pc2sms.git)
+
 
 ### Prerequisites
 
@@ -41,6 +43,31 @@ Install gRPC library, gRPC tools and dependencies:
 
 ```
 sudo apt install libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc protobuf-c-compiler
+```
+
+Ubuntu 18 gRPC in repository does not work (cause segmentation fault on init async server)
+
+build gRPC from the source:
+
+```
+sudo apt install build-essential autoconf libtool pkg-config cmake gcc clang zlib1g-dev
+sudo apt-get install build-essential autoconf libtool pkg-config cmake gcc clang zlib1g-dev
+git clone https://github.com/grpc/grpc.git
+git clone -b v1.24.3 https://github.com/grpc/grpc.git
+cd grpc
+git submodule update --init
+make
+sudo make install
+sudo cp ./bins/opt/protobuf/protoc /usr/local/sbin
+
+cd third_party/protobuf
+sudo make install
+
+```
+
+Copy gRPC shared libraries to the target machine to /usr/local/lib
+```
+scp /usr/local/lib/libgpr.so.8 /usr/local/lib/libgrpc++.so.1 /usr/local/lib/libgrpc.so.8 ......
 ```
 
 ### gRPC versions in Ubuntu's repositories
@@ -122,11 +149,19 @@ Ubuntu 18
 /usr/lib/libgpr.so.3
 /usr/lib/libgrpc.so.3
 
-
 scp /usr/lib/x86_64-linux-gnu/libprotobuf.so.10 /usr/lib/libgrpc++.so.1 /usr/lib/libgpr.so.3 /usr/lib/libgrpc.so.3 /usr/lib/x86_64-linux-gnu/libcares.so.2 andrei@lora.commandus.com:~/pc2sms/libs
 mv libcares.so.2 /usr/lib/x86_64-linux-gnu/
 mv libprotobuf.so.10 /usr/lib/x86_64-linux-gnu/
 mv libgrpc++.so.1 libgpr.so.3 libgrpc.so.3 /usr/lib/
+
+
+scp  /lib/x86_64-linux-gnu/ andrei@lora.commandus.com:~/pc2sms/libs
+
+mv libprotobuf.so.23 libgrpc++.so.1 libgpr.so.10 libgrpc.so.10 libcares.so.2 /usr/lib/x86_64-linux-gnu/
+mv libgrpc++.so.1 libgpr.so.3 libgrpc.so.3 /usr/lib/
+
+
+scp pc2sms send-sms andrei@lora.commandus.com:~/pc2sms
 
 ## config file
 
