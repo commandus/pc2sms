@@ -102,6 +102,7 @@ int parseCmd
     std::string &message,
     int &verbosity,
     bool &listen,
+    bool &count,
     int argc,
     char* argv[]
     )
@@ -114,6 +115,7 @@ int parseCmd
     struct arg_str *a_password = arg_str0("p", "password", "<password>", "service password");
     struct arg_str *a_message = arg_str0("m", "message", "<text>", "If not specified, read from stdin");
     struct arg_lit *a_listen = arg_lit0("l", "listen", "Listen mode (debug)");
+    struct arg_lit *a_count = arg_lit0("c", "count", "Count of SMS ready to send");
 
     struct arg_lit *a_verbosity = arg_litn("v", "verbose", 0, 3, "Set verbosity level");
 	struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
@@ -121,7 +123,7 @@ int parseCmd
 
 	void* argtable[] = { 
 		a_phone_number, a_service, a_login, a_password,
-    a_message, a_listen,
+    a_message, a_listen, a_count,
     a_verbosity, a_help, a_end 
 	};
 
@@ -151,6 +153,7 @@ int parseCmd
         message = *a_message->sval;
     }
     listen = a_listen->count > 0;
+    count =  a_count->count > 0;
 
     verbosity = a_verbosity->count;
 
@@ -180,47 +183,81 @@ static std::string mkServiceUrl(
 }
 
 static std::string configString() {
-  std::string fn = getDefaultConfigFileName(getProgramDir().c_str(), DEF_CONFIG_FILE_NAME).c_str();
-  std::string config = file2string(fn.c_str());
-  std::stringstream ss;
-  ss << fn << std::endl << config << std::endl;
-  return ss.str();
+    std::string fn = getDefaultConfigFileName(getProgramDir().c_str(), DEF_CONFIG_FILE_NAME).c_str();
+    std::string config = file2string(fn.c_str());
+    std::stringstream ss;
+    ss << fn << std::endl << config << std::endl;
+    return ss.str();
+}
+
+int countSMS(
+        pc2sms::sms::Stub *client,
+        const std::string  &phoneNumber,
+        const std::string  &login,
+        const std::string  &password,
+        const std::string  &message,
+        int verbosity
+) {
+    grpc::ClientContext context;
+    pc2sms::Credentials req;
+    pc2sms::ResponseCount response;
+
+    req.set_login(login);
+    req.set_password(password);
+
+    std::string s;
+    if (verbosity > 2) {
+        google::protobuf::util::MessageToJsonString(req, &s);
+        std::cout << "Request: " << s << std::endl;
+    }
+
+    grpc::Status status = client->countSMSToSend(&context, req, &response);
+
+    if (!status.ok()) {
+        std::cerr << "Error " << status.error_code() << ": " << status.error_message() << std::endl;
+        return (int) status.error_code();
+    }
+
+    s = "";
+    google::protobuf::util::MessageToJsonString(response, &s);
+    std::cout << s << std::endl;
+    return SMS_OK;
 }
 
 int sendSMS(
-  pc2sms::sms::Stub *client,
-  const std::string  &phoneNumber,
-  const std::string  &login,
-  const std::string  &password,
-  const std::string  &message,
-  int verbosity
+    pc2sms::sms::Stub *client,
+    const std::string  &phoneNumber,
+    const std::string  &login,
+    const std::string  &password,
+    const std::string  &message,
+    int verbosity
 ) {
-  grpc::ClientContext context;
-  pc2sms::RequestCommand req;
-  pc2sms::ResponseCommand response;
+    grpc::ClientContext context;
+    pc2sms::RequestCommand req;
+    pc2sms::ResponseCommand response;
 
-  req.mutable_credentials()->set_login(login);
-  req.mutable_credentials()->set_password(password);
-  req.mutable_sms()->set_phone(phoneNumber);
-  req.mutable_sms()->set_message(message);
+    req.mutable_credentials()->set_login(login);
+    req.mutable_credentials()->set_password(password);
+    req.mutable_sms()->set_phone(phoneNumber);
+    req.mutable_sms()->set_message(message);
 
-  std::string s;
-  if (verbosity > 2) {
-    google::protobuf::util::MessageToJsonString(req, &s);
-    std::cout << "Request: " << s << std::endl;
-  }
+    std::string s;
+    if (verbosity > 2) {
+        google::protobuf::util::MessageToJsonString(req, &s);
+        std::cout << "Request: " << s << std::endl;
+    }
 
-  grpc::Status status = client->requestToSend(&context, req, &response);
+    grpc::Status status = client->requestToSend(&context, req, &response);
 
-  if (!status.ok()) {
-    std::cerr << "Error " << status.error_code() << ": " << status.error_message() << std::endl;
-    return (int) status.error_code();
-  }
+    if (!status.ok()) {
+        std::cerr << "Error " << status.error_code() << ": " << status.error_message() << std::endl;
+        return (int) status.error_code();
+    }
 
-  s = "";
-  google::protobuf::util::MessageToJsonString(response, &s);
-  std::cout << s << std::endl;
-  return SMS_OK;
+    s = "";
+    google::protobuf::util::MessageToJsonString(response, &s);
+    std::cout << s << std::endl;
+    return SMS_OK;
 }
 
 int listenSMS(
@@ -264,6 +301,7 @@ int run(
     const std::string &phoneNumber,
     const std::string &message,
     bool listen,
+    bool count,
     int verbosity
 ) {
     // Create a default SSL ChannelCredentials object.
@@ -280,7 +318,10 @@ int run(
     if (listen) {
         r = listenSMS(std::cout, client.get(), login, password, verbosity);
     } else {
-        r = sendSMS(client.get(), phoneNumber, login, password, message, verbosity);
+        if (count)
+            r = countSMS(client.get(), phoneNumber, login, password, message, verbosity);
+        else
+            r = sendSMS(client.get(), phoneNumber, login, password, message, verbosity);
     }
     return r;
 }
@@ -295,11 +336,12 @@ int main(
     parseClientConfig(clientConfig, configStr);
 
     std::string phoneNumber;
-    bool listen;
+    bool listen, count;
     std::string message;
     int verbosity;
   
-    if (parseCmd(clientConfig.serviceAddress, clientConfig.login, clientConfig.password, phoneNumber, message, verbosity, listen, argc, argv) != 0) {
+    if (parseCmd(clientConfig.serviceAddress, clientConfig.login, clientConfig.password, phoneNumber, message,
+                 verbosity, listen, count, argc, argv) != 0) {
         exit(ERR_CODE_COMMAND_LINE);
     };
 
@@ -307,19 +349,23 @@ int main(
     setSignalHandler();
 
     if (!listen) {
-        if (message.empty()) {
-            std::string line;
-            while (std::getline(std::cin, line)) {
-                message += line;
+        if (!count) {
+            // send
+            if (message.empty()) {
+                std::string line;
+                while (std::getline(std::cin, line)) {
+                    message += line;
+                }
             }
-        }
 
-        if (message.empty()) {
-            std::cerr << "Error " << ERR_CODE_MESSAGE_EMPTY << ": " << strerror_sms(ERR_CODE_MESSAGE_EMPTY) << std::endl;
+            if (message.empty()) {
+                std::cerr << "Error " << ERR_CODE_MESSAGE_EMPTY << ": " << strerror_sms(ERR_CODE_MESSAGE_EMPTY)
+                          << std::endl;
+            }
         }
     }
 
-    int r = run(clientConfig.serviceAddress, clientConfig.login, clientConfig.password, phoneNumber, message, listen, verbosity);
+    int r = run(clientConfig.serviceAddress, clientConfig.login, clientConfig.password, phoneNumber, message, listen, count, verbosity);
 
     if (r) {
         std::cerr << "Error " << r << ": " << strerror_sms(r) << std::endl;

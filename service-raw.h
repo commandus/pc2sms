@@ -93,6 +93,46 @@ class RequestToSendData : public CommonCallData {
 };
 
 /**
+ * Responds on countSMSToSend
+ */
+class CountSMSToSendData : public CommonCallData {
+private:
+    SMSServiceImpl *service;
+    bool new_responder_created;
+    pc2sms::ResponseCount result;
+public:
+    // What we get from the client
+    pc2sms::Credentials request;
+    // What we send back to the client
+    grpc::ServerAsyncResponseWriter<pc2sms::ResponseCount> responder;
+    // Take in the "service" instance (in this case representing an asynchronous
+    // server) and the completion queue "cq" used for asynchronous communication
+    // with the gRPC runtime.
+    CountSMSToSendData(SMSServiceImpl *service);
+    virtual void Proceed(bool = true) override;
+};
+
+/**
+ * Responds on lastSMSToSend
+ */
+class LastSMSToSendData : public CommonCallData {
+private:
+    SMSServiceImpl *service;
+    bool new_responder_created;
+    pc2sms::SMS result;
+public:
+    // What we get from the client
+    pc2sms::Credentials request;
+    // What we send back to the client
+    grpc::ServerAsyncResponseWriter<pc2sms::SMS> responder;
+    // Take in the "service" instance (in this case representing an asynchronous
+    // server) and the completion queue "cq" used for asynchronous communication
+    // with the gRPC runtime.
+    LastSMSToSendData(SMSServiceImpl *service);
+    virtual void Proceed(bool = true) override;
+};
+
+/**
  * Responds on listen
  */
 class ListenData : public CommonCallData {

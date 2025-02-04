@@ -84,6 +84,8 @@ void SMSServiceImpl::run()
     // Spawn a new instances to serve new clients.
     new RequestToSendData(this);
     new ListenData(this);
+    new CountSMSToSendData(this);
+    new LastSMSToSendData(this);
 
     void* tag;  // uniquely identifies a request.
     bool successfulEvent;
@@ -164,6 +166,86 @@ void RequestToSendData::Proceed(bool successfulEvent) {
               new_responder_created = true;
 
               responder.Finish(result, grpc::Status(), (void*) this);
+            }
+            status = FINISH;
+            break;
+        case FINISH:
+            delete this;
+            break;
+        default:
+            break;
+    }
+}
+
+/**
+ * =========== CountSMSToSendData ===========
+ */
+CountSMSToSendData::CountSMSToSendData(
+    SMSServiceImpl *service
+)
+        : CommonCallData(&service->service, service->cq.get()),
+          responder(&ctx), service(service), new_responder_created(false)
+{
+    Proceed();
+}
+
+void CountSMSToSendData::Proceed(bool successfulEvent) {
+    switch (status) {
+        case CREATE:
+            status = PROCESS;
+            service->service.RequestcountSMSToSend(&ctx, &request, &responder, cq, cq, this);
+            break;
+        case PROCESS:
+            if (!new_responder_created) {
+                if (service->isAllowed(request)) {
+                    result.set_count(0);
+                } else {
+                    result.set_count(-1);
+                }
+                new CountSMSToSendData(service);
+                new_responder_created = true;
+                responder.Finish(result, grpc::Status(), (void*) this);
+            }
+            status = FINISH;
+            break;
+        case FINISH:
+            delete this;
+            break;
+        default:
+            break;
+    }
+}
+
+/**
+ * =========== LastSMSToSendData ===========
+ */
+LastSMSToSendData::LastSMSToSendData(
+    SMSServiceImpl *service
+)
+        : CommonCallData(&service->service, service->cq.get()),
+          responder(&ctx), service(service), new_responder_created(false)
+{
+    Proceed();
+}
+
+void LastSMSToSendData::Proceed(bool successfulEvent) {
+    switch (status) {
+        case CREATE:
+            status = PROCESS;
+            service->service.RequestlastSMSToSend(&ctx, &request, &responder, cq, cq, this);
+            break;
+        case PROCESS:
+            if (!new_responder_created) {
+                if (service->isAllowed(request)) {
+                    result.set_message("");
+                    result.set_phone("");
+                } else {
+                    result.set_message("N/A");
+                    result.set_phone("");
+                }
+                new LastSMSToSendData(service);
+                new_responder_created = true;
+                responder.Finish(result, grpc::Status(), (void*) this);
             }
             status = FINISH;
             break;
