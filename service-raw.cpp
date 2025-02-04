@@ -35,87 +35,90 @@ SMSServiceImpl::SMSServiceImpl(
   : address(a_grpc_listener_address), login(a_login), password(a_password),
     clientsListenSMS(this, apolicy), queuingMgr(nullptr), running(false)
 {
-  start();
+    start();
 }
 
 void SMSServiceImpl::stop() {
-  running = false;
-  // stop service
-  gpr_timespec timeout {10, 0};
+    running = false;
+    // stop service
+    gpr_timespec timeout {10, 0};
 
-  server->Shutdown(timeout);
-  // Always shutdown the completion queue AFTER the server.
-  cq->Shutdown();
-  
-  if (queuingMgr) {
-    delete queuingMgr;
-    queuingMgr = nullptr;
-  }
-  std::cerr << MSG_SERVICE_STOPPED << std::endl;
+    server->Shutdown(timeout);
+    // Always shutdown the completion queue AFTER the server.
+    cq->Shutdown();
+
+    if (queuingMgr) {
+        delete queuingMgr;
+        queuingMgr = nullptr;
+    }
+    std::cerr << MSG_SERVICE_STOPPED << std::endl;
 }
 
 int SMSServiceImpl::start() {
-  // GRPC listener
-  grpc::ServerBuilder builder;
-  // Listen on the given address without any authentication mechanism.
-  builder.AddListeningPort(address, grpc::InsecureServerCredentials());
+    // GRPC listener
+    grpc::ServerBuilder builder;
+    // Listen on the given address without any authentication mechanism.
+    builder.AddListeningPort(address, grpc::InsecureServerCredentials())
+        .AddChannelArgument(GRPC_ARG_KEEPALIVE_TIME_MS, 30*1000)
+        .AddChannelArgument(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, 60*1000);
 
-  // Register "service" as the instance through which we'll communicate with
-  // clients. In this case it corresponds to an *asynchronous* service.
-  builder.RegisterService(&service); 
+    // Register "service" as the instance through which we'll communicate with
+    // clients. In this case it corresponds to an *asynchronous* service.
+    builder.RegisterService(&service);
 
-  // Get hold of the completion queue used for the asynchronous communication
-  // with the gRPC runtime.
-  cq = builder.AddCompletionQueue();
+    // Get hold of the completion queue used for the asynchronous communication
+    // with the gRPC runtime.
+    cq = builder.AddCompletionQueue();
 
-  // after cq created
-  queuingMgr = new QueuingMgr(this);
+    // after cq created
+    queuingMgr = new QueuingMgr(this);
 
-  // Finally assemble the server.
-  server = builder.BuildAndStart();
+    // Finally assemble the server.
+    server = builder.BuildAndStart();
 
-  return 0;
+    return 0;
 }
 
 void SMSServiceImpl::run()
 {
-  // Spawn a new instances to serve new clients.
-  new RequestToSendData(this);
-  new ListenData(this);
+    // Spawn a new instances to serve new clients.
+    new RequestToSendData(this);
+    new ListenData(this);
 
-  void* tag;  // uniquely identifies a request.
-  bool successfulEvent;
-  running = true;
-  while (running) {
-    // Block waiting to read the next event from the completion queue. The
-    // event is uniquely identified by its tag, which in this case is the
-    // memory address of an instance.
-    // The return value of Next should always be checked. This return value
-    // tells us whether there is any kind of event or cq_ is shutting down.
-    if (!cq->Next(&tag, &successfulEvent))
-      break;
-    static_cast<CommonCallData*>(tag)->Proceed(successfulEvent);
-  }
+    void* tag;  // uniquely identifies a request.
+    bool successfulEvent;
+    running = true;
+    while (running) {
+        // Block waiting to read the next event from the completion queue. The
+        // event is uniquely identified by its tag, which in this case is the
+        // memory address of an instance.
+        // The return value of Next should always be checked. This return value
+        // tells us whether there is any kind of event or cq_ is shutting down.
+        if (!cq->Next(&tag, &successfulEvent))
+            break;
+        static_cast<CommonCallData*>(tag)->Proceed(successfulEvent);
+    }
 }
 
 SMSServiceImpl::~SMSServiceImpl()
 {
-  stop();
+    stop();
 }
 
 bool SMSServiceImpl::isAllowed(
-  const pc2sms::Credentials &value
+    const pc2sms::Credentials &value
 ) {
-  return (value.login() == this->login) && (value.password() == this->password);
+    return (value.login() == this->login) && (value.password() == this->password);
 }
 
 // Take in the "service" instance (in this case representing an asynchronous
 // server) and the completion queue "cq" used for asynchronous communication
 // with the gRPC runtime.
 CommonCallData::CommonCallData(
-  pc2sms::sms::AsyncService* a_service,
-  grpc::ServerCompletionQueue* a_cq) 
-  : service(a_service), cq(a_cq), status(CREATE)
+    pc2sms::sms::AsyncService* a_service,
+    grpc::ServerCompletionQueue* a_cq
+)
+    : service(a_service), cq(a_cq), status(CREATE)
 {
 }
 
@@ -123,71 +126,73 @@ CommonCallData::CommonCallData(
  * =========== RequestToSendData ===========
  */
 RequestToSendData::RequestToSendData(
-  SMSServiceImpl *service
-) : CommonCallData(&service->service, service->cq.get()), 
-  responder(&ctx), service(service), new_responder_created(false)
+    SMSServiceImpl *service
+)
+    : CommonCallData(&service->service, service->cq.get()),
+    responder(&ctx), service(service), new_responder_created(false)
 {
-  Proceed();
+    Proceed();
 }
 
 void RequestToSendData::notifyClients(const pc2sms::SMS &value)
 {
-  service->queuingMgr->enqueue(value);
+    service->queuingMgr->enqueue(value);
 }
 
 void RequestToSendData::notifyClients(const std::vector<pc2sms::SMS> &values)
 {
-  if (!values.empty())
-    service->queuingMgr->enqueue(values);
+    if (!values.empty())
+        service->queuingMgr->enqueue(values);
 }
 
 void RequestToSendData::Proceed(bool successfulEvent) {
-  switch (status) {
-  case CREATE:
-    status = PROCESS;
-    service->service.RequestrequestToSend(&ctx, &request, &responder, cq, cq, this);
-    break;
-  case PROCESS:
-    if (!new_responder_created) {
-      if (service->isAllowed(request.credentials())) {
-        notifyClients(request.sms());
-        result.set_count(1);
-      } else {
-        result.set_count(-1);
-      }
+    switch (status) {
+        case CREATE:
+            status = PROCESS;
+            service->service.RequestrequestToSend(&ctx, &request, &responder, cq, cq, this);
+            break;
+        case PROCESS:
+            if (!new_responder_created) {
+              if (service->isAllowed(request.credentials())) {
+                notifyClients(request.sms());
+                result.set_count(1);
+              } else {
+                result.set_count(-1);
+              }
 
-      new RequestToSendData(service);
-      new_responder_created = true;
+              new RequestToSendData(service);
+              new_responder_created = true;
 
-      responder.Finish(result, grpc::Status(), (void*) this);
+              responder.Finish(result, grpc::Status(), (void*) this);
+            }
+            status = FINISH;
+            break;
+        case FINISH:
+            delete this;
+            break;
+        default:
+            break;
     }
-    status = FINISH;
-    break;
-  case FINISH:
-    delete this;
-    break;
-  default:
-    break;
-  }
 }
 
 /**
  * =========== ListenData ===========
  */
 ListenData::ListenData(
-  SMSServiceImpl *sms_service
-) : smsService(sms_service), CommonCallData(&sms_service->service, sms_service->cq.get()), 
+    SMSServiceImpl *sms_service
+)
+    : smsService(sms_service), CommonCallData(&sms_service->service, sms_service->cq.get()),
     responder(&ctx), new_responder_created(false)
 {
-  ctx.AsyncNotifyWhenDone(this);
-  Proceed();
+    ctx.AsyncNotifyWhenDone(this);
+    Proceed();
 }
 
 /**
  * @see https://www.gresearch.co.uk/2019/03/20/lessons-learnt-from-writing-asynchronous-streaming-grpc-services-in-c/
  */
 void ListenData::enqueue(
-  const std::vector<pc2sms::SMS> &values
+    const std::vector<pc2sms::SMS> &values
 ) {
     // completion queue alarm
     for (std::vector<pc2sms::SMS>::const_iterator it = values.begin(); it != values.end(); it++) {
@@ -202,12 +207,12 @@ void ListenData::enqueue(
 
 bool ListenData::writeNext()
 {
-  if (result.empty())
-    return false;
-  pc2sms::SMS sms = result.front();
-  result.pop();
-  responder.Write(sms, (void*) this);
-  return true;
+    if (result.empty())
+        return false;
+    pc2sms::SMS sms = result.front();
+    result.pop();
+    responder.Write(sms, (void*) this);
+    return true;
 }
 
 /**
@@ -339,11 +344,11 @@ void QueuingMgr::wakeUp() {
  * Push into queue SMS objects from vector of active clients to send notification about SMS
  */
 void QueuingMgr::Proceed(bool successfulEvent) {
-  if (result.empty())
-    return;
-  int cnt = smsService->clientsListenSMS.enqueue(result);
-  if (cnt > 0)
-      result.clear();
+    if (result.empty())
+        return;
+    int cnt = smsService->clientsListenSMS.enqueue(result);
+    if (cnt > 0)
+        result.clear();
 }
 
 int QueuingMgr::smsCountReady2Send() const {

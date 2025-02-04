@@ -224,61 +224,65 @@ int sendSMS(
 }
 
 int listenSMS(
-  std::ostream &strm,
-  pc2sms::sms::Stub *client,
-  const std::string  &login,
-  const std::string  &password,
-  int verbosity
+    std::ostream &strm,
+    pc2sms::sms::Stub *client,
+    const std::string  &login,
+    const std::string  &password,
+    int verbosity
 ) {
-  grpc::ClientContext context;
-  pc2sms::Credentials credentials;
-  credentials.set_login(login);
-  credentials.set_password(password);
-  
-  if (verbosity > 2) {
-    std::string s;
-    google::protobuf::util::MessageToJsonString(credentials, &s);
-    std::cout << "Request: " << s << std::endl;
-  }
+    grpc::ClientContext context;
+    pc2sms::Credentials credentials;
+    credentials.set_login(login);
+    credentials.set_password(password);
 
-  std::unique_ptr <grpc::ClientReader <pc2sms::SMS>> reader = client->listenSMSToSend(&context, credentials);
-  pc2sms::SMS sms;
-  while (!stopped && reader->Read(&sms)) {
-      std::string s;
-      google::protobuf::util::MessageToJsonString(sms, &s);
-      std::cout << s << std::endl;
-  }
-  grpc::Status status = reader->Finish();
-  if (!status.ok())
-    return (int) status.error_code();
-  return SMS_OK;
+    if (verbosity > 2) {
+        std::string s;
+        google::protobuf::util::MessageToJsonString(credentials, &s);
+        std::cout << "Request: " << s << std::endl;
+    }
+
+    std::unique_ptr <grpc::ClientReader <pc2sms::SMS>> reader = client->listenSMSToSend(&context, credentials);
+    pc2sms::SMS sms;
+    while (!stopped && reader->Read(&sms)) {
+        std::string s;
+        google::protobuf::util::MessageToJsonString(sms, &s);
+        std::cout << s << std::endl;
+    }
+    grpc::Status status = reader->Finish();
+    if (!status.ok())
+        return (int) status.error_code();
+    return SMS_OK;
 }
 
 /**
  * 
  */
 int run(
-  const std::string &service,
-  const std::string &login,
-  const std::string &password,
-  const std::string &phoneNumber,
-  const std::string &message,
-  bool listen,
-  int verbosity
+    const std::string &service,
+    const std::string &login,
+    const std::string &password,
+    const std::string &phoneNumber,
+    const std::string &message,
+    bool listen,
+    int verbosity
 ) {
-  // Create a default SSL ChannelCredentials object.
-  auto channel_creds = grpc::InsecureChannelCredentials();
-  // Create a channel using the credentials created in the previous step.
-  std::shared_ptr<grpc::Channel> channel = grpc::CreateChannel(mkServiceUrl(service), channel_creds);
-  // Create a stub on the channel.
-  std::unique_ptr<pc2sms::sms::Stub> client(pc2sms::sms::NewStub(channel));
-  int r;
-  if (listen) {
-    r = listenSMS(std::cout, client.get(), login, password, verbosity);
-  } else {
-    r = sendSMS(client.get(), phoneNumber, login, password, message, verbosity);
-  }
-  return r;
+    // Create a default SSL ChannelCredentials object.
+    auto channel_creds = grpc::InsecureChannelCredentials();
+    // Create a channel using the credentials created in the previous step.
+    grpc::ChannelArguments channelArgs;
+    channelArgs.SetInt(GRPC_ARG_KEEPALIVE_TIME_MS, 30 * 1000);
+    channelArgs.SetInt(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, 60 * 1000);
+    std::shared_ptr<grpc::Channel> channel = grpc::CreateCustomChannel(mkServiceUrl(service), channel_creds, channelArgs);
+
+    // Create a stub on the channel.
+    std::unique_ptr<pc2sms::sms::Stub> client(pc2sms::sms::NewStub(channel));
+    int r;
+    if (listen) {
+        r = listenSMS(std::cout, client.get(), login, password, verbosity);
+    } else {
+        r = sendSMS(client.get(), phoneNumber, login, password, message, verbosity);
+    }
+    return r;
 }
 
 int main(
