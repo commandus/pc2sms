@@ -198,7 +198,7 @@ void CountSMSToSendData::Proceed(bool successfulEvent) {
         case PROCESS:
             if (!new_responder_created) {
                 if (service->isAllowed(request)) {
-                    result.set_count(0);
+                    result.set_count(service->queuingMgr->smsCountReady2Send());
                 } else {
                     result.set_count(-1);
                 }
@@ -237,8 +237,10 @@ void LastSMSToSendData::Proceed(bool successfulEvent) {
         case PROCESS:
             if (!new_responder_created) {
                 if (service->isAllowed(request)) {
-                    result.set_message("");
-                    result.set_phone("");
+                    if (!service->queuingMgr->firstSmsCountReady2Send(result)) {
+                        result.set_message("");
+                        result.set_phone("");
+                    }
                 } else {
                     result.set_message("N/A");
                     result.set_phone("");
@@ -435,4 +437,16 @@ void QueuingMgr::Proceed(bool successfulEvent) {
 
 int QueuingMgr::smsCountReady2Send() const {
     return result.size();
+}
+
+bool QueuingMgr::firstSmsCountReady2Send(
+    pc2sms::SMS &sms
+) {
+    bool r = !result.empty();
+    if (r) {
+        sms.set_phone(result.front().phone());
+        sms.set_message(result.front().message());
+        result.erase(result.begin());
+    }
+    return r;
 }

@@ -176,6 +176,8 @@ class QueuingMgr : public CommonCallData {
         void enqueue(const pc2sms::SMS &value);
 
     int smsCountReady2Send() const;
+
+    bool firstSmsCountReady2Send(pc2sms::SMS &sms);
 };
 
 #endif
